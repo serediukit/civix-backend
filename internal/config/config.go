@@ -2,15 +2,17 @@ package config
 
 import (
 	"os"
-	"strconv"
 	"time"
+
+	"github.com/serediukit/civix-backend/pkg/database"
+	"github.com/serediukit/civix-backend/pkg/redis"
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	Redis    RedisConfig
+	Server   *ServerConfig
+	Database *database.DatabaseConfig
+	Redis    *redis.RedisConfig
+	JWT      *JWTConfig
 }
 
 type ServerConfig struct {
@@ -18,57 +20,29 @@ type ServerConfig struct {
 	GinMode string
 }
 
-type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Name     string
-	SSLMode  string
-}
-
 type JWTConfig struct {
 	Secret     string
 	Expiration time.Duration
 }
 
-type RedisConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
-}
-
 func LoadConfig() (*Config, error) {
-	// Load environment variables from .env file (if exists)
 	_ = os.Setenv("ENV_FILE_LOADED", "true")
 
-	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
-	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "0"))
+	redisConfig := redis.GetRedisConfig()
+	databaseConfig := database.GetDBConfig()
+
 	jwtExpiration, _ := time.ParseDuration(getEnv("JWT_EXPIRATION", "24h"))
 
 	return &Config{
-		Server: ServerConfig{
+		Server: &ServerConfig{
 			Port:    getEnv("PORT", "8080"),
 			GinMode: getEnv("GIN_MODE", "debug"),
 		},
-		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     dbPort,
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
-			Name:     getEnv("DB_NAME", "civix_db"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
-		},
-		JWT: JWTConfig{
+		Database: databaseConfig,
+		Redis:    redisConfig,
+		JWT: &JWTConfig{
 			Secret:     getEnv("JWT_SECRET", "your_jwt_secret_key_here"),
 			Expiration: jwtExpiration,
-		},
-		Redis: RedisConfig{
-			Host:     getEnv("REDIS_HOST", "localhost"),
-			Port:     getEnv("REDIS_PORT", "6379"),
-			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       redisDB,
 		},
 	}, nil
 }
@@ -78,4 +52,12 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func (c *Config) GetDBConfig() *database.DatabaseConfig {
+	return c.Database
+}
+
+func (c *Config) GetRedisConfig() *redis.RedisConfig {
+	return c.Redis
 }

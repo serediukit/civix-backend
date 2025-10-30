@@ -14,11 +14,11 @@ import (
 	"github.com/serediukit/civix-backend/internal/config"
 	"github.com/serediukit/civix-backend/internal/controller"
 	"github.com/serediukit/civix-backend/internal/middleware"
-	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/internal/service"
 	"github.com/serediukit/civix-backend/internal/util"
 	"github.com/serediukit/civix-backend/pkg/database"
+	"github.com/serediukit/civix-backend/pkg/redis"
 )
 
 func main() {
@@ -26,40 +26,33 @@ func main() {
 	_ = godotenv.Load()
 
 	// Initialize configuration
-	cfg, err := config.LoadConfig()
+	config, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	// Set Gin mode
-	gin.SetMode(cfg.Server.GinMode)
+	gin.SetMode(config.Server.GinMode)
+
+	ctx := context.Background()
 
 	// Initialize database connections
-	db, err := database.InitDB()
+	db, err := database.NewDB(ctx, config)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto-migrate models
-	if err := db.AutoMigrate(&model.User{}); err != nil {
-		log.Fatalf("Failed to auto-migrate database: %v", err)
-	}
-
 	// Initialize Redis
-	redisClient, err := database.InitRedis()
+	redisClient, err := redis.NewRedis(config)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	redisRepo := repository.NewRedisRepository(redisClient)
-
 	// Initialize utilities
-	jwtUtil := util.NewJWTUtil(cfg)
+	jwtUtil := util.NewJWTUtil(globalConfig)
 
 	// Initialize services
-	authService := service.NewAuthService(userRepo, redisRepo, cfg, jwtUtil)
+	authService := service.NewAuthService(userRepo, redisRepo, config, jwtUtil)
 	userService := service.NewUserService(userRepo)
 
 	// Initialize controllers
@@ -74,13 +67,13 @@ func main() {
 
 	// Create HTTP server
 	srv := &http.Server{
-		Addr:    ":" + cfg.Server.Port,
+		Addr:    ":" + globalConfig.Server.Port,
 		Handler: router,
 	}
 
 	// Graceful shutdown
 	go func() {
-		log.Printf("Server is running on port %s\n", cfg.Server.Port)
+		log.Printf("Server is running on port %s\n", globalConfig.Server.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
@@ -105,7 +98,7 @@ func main() {
 		sqlDB.Close()
 	}
 
-	if err := database.CloseRedis(); err != nil {
+	if err := redis.CloseRedis(); err != nil {
 		log.Printf("Failed to close Redis connection: %v", err)
 	}
 
