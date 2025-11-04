@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/middleware"

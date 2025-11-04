@@ -8,25 +8,25 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisConfigGetter interface {
-	GetRedisConfig() *RedisConfig
-}
-
 type CachedStore struct {
 	client *redis.Client
 }
 
-func NewRedis(config RedisConfigGetter) (*CachedStore, error) {
-	redisConfig := config.GetRedisConfig()
+func (s CachedStore) Close() {
+	if err := s.client.Close(); err != nil {
+		log.Fatalf("Failed to close Redis connection: %v", err)
+	}
+}
 
+func NewRedis(config *RedisConfig) (*CachedStore, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:         fmt.Sprintf("%s:%s", redisConfig.Host, redisConfig.Port),
-		Password:     redisConfig.Password,
-		DB:           redisConfig.DB,
-		PoolSize:     redisConfig.PoolSize,
-		MinIdleConns: redisConfig.MinIdleConns,
-		DialTimeout:  redisConfig.DialTimeout,
-		ReadTimeout:  redisConfig.ReadTimeout,
+		Addr:         fmt.Sprintf("%s:%s", config.Host, config.Port),
+		Password:     config.Password,
+		DB:           config.DB,
+		PoolSize:     config.PoolSize,
+		MinIdleConns: config.MinIdleConns,
+		DialTimeout:  config.DialTimeout,
+		ReadTimeout:  config.ReadTimeout,
 	})
 
 	_, err := client.Ping(context.Background()).Result()

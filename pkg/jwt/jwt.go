@@ -1,4 +1,4 @@
-package util
+package jwt
 
 import (
 	"crypto/rand"
@@ -7,20 +7,23 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/serediukit/civix-backend/internal/config"
 )
 
 var (
 	ErrInvalidToken = errors.New("invalid token")
 )
 
-type JWTUtil struct {
-	secretKey []byte
+type JWT struct {
+	secretKey              []byte
+	accessTokenExpiration  time.Duration
+	refreshTokenExpiration time.Duration
 }
 
-func NewJWTUtil(cfg *config.Config) *JWTUtil {
-	return &JWTUtil{
-		secretKey: []byte(cfg.JWT.Secret),
+func NewJWT(config *JWTConfig) *JWT {
+	return &JWT{
+		secretKey:              []byte(config.Secret),
+		accessTokenExpiration:  config.TokenExpiration,
+		refreshTokenExpiration: config.RefreshExpiration,
 	}
 }
 
@@ -30,8 +33,8 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func (j *JWTUtil) GenerateToken(userID uint, email string, expiresIn time.Duration) (string, error) {
-	expirationTime := time.Now().Add(expiresIn)
+func (j *JWT) GenerateToken(userID uint, email string) (string, error) {
+	expirationTime := time.Now().Add(j.accessTokenExpiration)
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,
@@ -50,7 +53,7 @@ func (j *JWTUtil) GenerateToken(userID uint, email string, expiresIn time.Durati
 	return tokenString, nil
 }
 
-func (j *JWTUtil) ValidateToken(tokenString string) (*Claims, error) {
+func (j *JWT) ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken

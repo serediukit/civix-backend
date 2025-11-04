@@ -8,7 +8,7 @@ import (
 	"github.com/serediukit/civix-backend/internal/config"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
-	"github.com/serediukit/civix-backend/internal/util"
+	"github.com/serediukit/civix-backend/pkg/jwt"
 )
 
 type AuthService interface {
@@ -19,25 +19,20 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo      repository.UserRepository
-	redisRepo     repository.RedisRepository
-	jwtUtil       *util.JWTUtil
-	tokenExpiry   time.Duration
-	refreshExpiry time.Duration
+	userRepo  repository.UserRepository
+	redisRepo repository.RedisRepository
+	jwt       *jwt.JWT
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
 	redisRepo repository.RedisRepository,
-	cfg *config.Config,
-	jwtUtil *util.JWTUtil,
+	jwt *jwt.JWT,
 ) AuthService {
 	return &authService{
-		userRepo:      userRepo,
-		redisRepo:     redisRepo,
-		jwtUtil:       jwtUtil,
-		tokenExpiry:   cfg.JWT.Expiration,
-		refreshExpiry: cfg.JWT.Expiration * 24 * 7, // 7 days
+		userRepo:  userRepo,
+		redisRepo: redisRepo,
+		jwt:       jwt,
 	}
 }
 
@@ -80,13 +75,13 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 	}
 
 	// Generate access token
-	tokenString, err := s.jwtUtil.GenerateToken(user.ID, user.Email, s.tokenExpiry)
+	tokenString, err := s.jwt.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get token expiration time
-	token, _ := s.jwtUtil.ValidateToken(tokenString)
+	token, _ := s.jwt.ValidateToken(tokenString)
 
 	return &model.Token{
 		AccessToken: tokenString,
@@ -96,7 +91,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 
 func (s *authService) Logout(ctx context.Context, tokenString string) error {
 	// Add token to blacklist
-	claims, err := s.jwtUtil.ValidateToken(tokenString)
+	claims, err := s.jwt.ValidateToken(tokenString)
 	if err != nil {
 		return err
 	}
@@ -107,7 +102,7 @@ func (s *authService) Logout(ctx context.Context, tokenString string) error {
 
 func (s *authService) RefreshToken(ctx context.Context, tokenString string) (*model.Token, error) {
 	// Validate the refresh token
-	claims, err := s.jwtUtil.ValidateToken(tokenString)
+	claims, err := s.jwt.ValidateToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
@@ -122,16 +117,16 @@ func (s *authService) RefreshToken(ctx context.Context, tokenString string) (*mo
 	}
 
 	// Generate new access token
-	newTokenString, err := s.jwtUtil.GenerateToken(claims.UserID, claims.Email, s.tokenExpiry)
+	newTokenString, err := s.jwt.GenerateToken(claims.UserID, claims.Email)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get new token expiration time
-	newToken, _ := s.jwtUtil.ValidateToken(newTokenString)
+	newToken, _ := s.jwt.ValidateToken(newTokenString)
 
 	// Add old token to blacklist
-	s.redisRepo.SetBlacklist(ctx, tokenString, s.tokenExpiry)
+	s.redisRepo.SetBlacklist(ctx, tokenString)
 
 	return &model.Token{
 		AccessToken: newTokenString,

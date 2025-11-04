@@ -14,10 +14,10 @@ import (
 	"github.com/serediukit/civix-backend/internal/config"
 	"github.com/serediukit/civix-backend/internal/controller"
 	"github.com/serediukit/civix-backend/internal/middleware"
-	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/internal/service"
 	"github.com/serediukit/civix-backend/internal/util"
 	"github.com/serediukit/civix-backend/pkg/database"
+	"github.com/serediukit/civix-backend/pkg/jwt"
 	"github.com/serediukit/civix-backend/pkg/redis"
 )
 
@@ -37,22 +37,24 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize database connections
-	db, err := database.NewDB(ctx, config)
+	db, err := database.NewDB(ctx, config.GetDBConfig())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+	defer db.Close()
 
 	// Initialize Redis
-	redisClient, err := redis.NewRedis(config)
+	redisClient, err := redis.NewRedis(config.GetRedisConfig())
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
+	defer redisClient.Close()
 
 	// Initialize utilities
-	jwtUtil := util.NewJWTUtil(globalConfig)
+	jwt := jwt.NewJWT(config.GetJWTConfig())
 
 	// Initialize services
-	authService := service.NewAuthService(userRepo, redisRepo, config, jwtUtil)
+	authService := service.NewAuthService(userRepo, redisRepo, config, jwt)
 	userService := service.NewUserService(userRepo)
 
 	// Initialize controllers
@@ -67,13 +69,13 @@ func main() {
 
 	// Create HTTP server
 	srv := &http.Server{
-		Addr:    ":" + globalConfig.Server.Port,
+		Addr:    ":" + config.Server.Port,
 		Handler: router,
 	}
 
 	// Graceful shutdown
 	go func() {
-		log.Printf("Server is running on port %s\n", globalConfig.Server.Port)
+		log.Printf("Server is running on port %s\n", config.Server.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
@@ -90,16 +92,6 @@ func main() {
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	// Close database connections
-	sqlDB, err := db.DB()
-	if err == nil {
-		sqlDB.Close()
-	}
-
-	if err := redis.CloseRedis(); err != nil {
-		log.Printf("Failed to close Redis connection: %v", err)
 	}
 
 	log.Println("Server exiting")

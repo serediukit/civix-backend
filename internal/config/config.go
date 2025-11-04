@@ -2,9 +2,9 @@ package config
 
 import (
 	"os"
-	"time"
 
 	"github.com/serediukit/civix-backend/pkg/database"
+	"github.com/serediukit/civix-backend/pkg/jwt"
 	"github.com/serediukit/civix-backend/pkg/redis"
 )
 
@@ -12,7 +12,7 @@ type Config struct {
 	Server   *ServerConfig
 	Database *database.DatabaseConfig
 	Redis    *redis.RedisConfig
-	JWT      *JWTConfig
+	JWT      *jwt.JWTConfig
 }
 
 type ServerConfig struct {
@@ -20,18 +20,12 @@ type ServerConfig struct {
 	GinMode string
 }
 
-type JWTConfig struct {
-	Secret     string
-	Expiration time.Duration
-}
-
 func LoadConfig() (*Config, error) {
 	_ = os.Setenv("ENV_FILE_LOADED", "true")
 
-	redisConfig := redis.GetRedisConfig()
 	databaseConfig := database.GetDBConfig()
-
-	jwtExpiration, _ := time.ParseDuration(getEnv("JWT_EXPIRATION", "24h"))
+	redisConfig := redis.GetRedisConfig()
+	jwtConfig := jwt.GetJWTConfig()
 
 	return &Config{
 		Server: &ServerConfig{
@@ -40,10 +34,7 @@ func LoadConfig() (*Config, error) {
 		},
 		Database: databaseConfig,
 		Redis:    redisConfig,
-		JWT: &JWTConfig{
-			Secret:     getEnv("JWT_SECRET", "your_jwt_secret_key_here"),
-			Expiration: jwtExpiration,
-		},
+		JWT:      jwtConfig,
 	}, nil
 }
 
@@ -60,4 +51,8 @@ func (c *Config) GetDBConfig() *database.DatabaseConfig {
 
 func (c *Config) GetRedisConfig() *redis.RedisConfig {
 	return c.Redis
+}
+
+func (c *Config) GetJWTConfig() *jwt.JWTConfig {
+	return jwt.GetJWTConfig()
 }

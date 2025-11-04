@@ -8,25 +8,23 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DBConfigGetter interface {
-	GetDBConfig() *DatabaseConfig
-}
-
 type Store struct {
 	db *pgxpool.Pool
 }
 
-func NewDB(ctx context.Context, config DBConfigGetter) (*Store, error) {
-	dbConfig := config.GetDBConfig()
+func (s *Store) Close() {
+	s.db.Close()
+}
 
+func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		dbConfig.User,
-		dbConfig.Password,
-		dbConfig.Host,
-		dbConfig.Port,
-		dbConfig.Name,
-		dbConfig.SSLMode,
+		config.User,
+		config.Password,
+		config.Host,
+		config.Port,
+		config.Name,
+		config.SSLMode,
 	)
 
 	pool, err := pgxpool.New(ctx, connStr)

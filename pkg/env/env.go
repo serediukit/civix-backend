@@ -6,14 +6,7 @@ import (
 	"time"
 )
 
-var isLoaded bool
-
 func GetEnv(key, defaultValue string) string {
-	if !isLoaded {
-		_ = os.Setenv("ENV_FILE_LOADED", "true")
-		isLoaded = true
-	}
-
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
@@ -22,11 +15,6 @@ func GetEnv(key, defaultValue string) string {
 }
 
 func GetEnvInt(key string, defaultValue int) int {
-	if !isLoaded {
-		_ = os.Setenv("ENV_FILE_LOADED", "true")
-		isLoaded = true
-	}
-
 	if value, exists := os.LookupEnv(key); exists {
 		intValue, err := strconv.Atoi(value)
 		if err == nil {
@@ -38,11 +26,6 @@ func GetEnvInt(key string, defaultValue int) int {
 }
 
 func GetEnvDurationSeconds(key string, defaultValue time.Duration) time.Duration {
-	if !isLoaded {
-		_ = os.Setenv("ENV_FILE_LOADED", "true")
-		isLoaded = true
-	}
-
 	if value, exists := os.LookupEnv(key); exists {
 		intValue, err := strconv.Atoi(value)
 		if err == nil {
@@ -50,5 +33,5 @@ func GetEnvDurationSeconds(key string, defaultValue time.Duration) time.Duration
 		}
 	}
 
-	return defaultValue * time.Second
+	return defaultValue
 }
