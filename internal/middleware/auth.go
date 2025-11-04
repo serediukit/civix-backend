@@ -12,10 +12,10 @@ import (
 
 type AuthMiddleware struct {
 	jwtUtil   *util.JWTUtil
-	redisRepo repository.RedisRepository
+	redisRepo repository.CacheRepository
 }
 
-func NewAuthMiddleware(jwtUtil *util.JWTUtil, redisRepo repository.RedisRepository) *AuthMiddleware {
+func NewAuthMiddleware(jwtUtil *util.JWTUtil, redisRepo repository.CacheRepository) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtUtil:   jwtUtil,
 		redisRepo: redisRepo,

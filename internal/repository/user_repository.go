@@ -14,7 +14,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
-	FindUserByID(ctx context.Context, id uint64) (*model.User, error)
+	GetUserByID(ctx context.Context, id uint64) (*model.User, error)
 	// FindByEmail(ctx context.Context, email string) (*model.User, error)
 	// Update(ctx context.Context, user *model.User) error
 	// Delete(ctx context.Context, id uint) error
@@ -60,7 +60,7 @@ func (r *userRepository) CreateUser(ctx context.Context, user *model.User) error
 	return nil
 }
 
-func (r *userRepository) FindUserByID(ctx context.Context, id uint64) (*model.User, error) {
+func (r *userRepository) GetUserByID(ctx context.Context, id uint64) (*model.User, error) {
 	sql, args, err := db.SB().
 		Select(
 			db.TableUsersColumnUserID,

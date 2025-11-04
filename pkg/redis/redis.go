@@ -12,7 +12,7 @@ type CachedStore struct {
 	client *redis.Client
 }
 
-func (s CachedStore) Close() {
+func (s *CachedStore) Close() {
 	if err := s.client.Close(); err != nil {
 		log.Fatalf("Failed to close Redis connection: %v", err)
 	}
@@ -38,4 +38,8 @@ func NewRedis(config *RedisConfig) (*CachedStore, error) {
 	return &CachedStore{
 		client: client,
 	}, nil
+}
+
+func (s *CachedStore) GetClient() *redis.Client {
+	return s.client
 }

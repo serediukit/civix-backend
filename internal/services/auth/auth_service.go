@@ -18,20 +18,20 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo  repository.UserRepository
-	redisRepo repository.RedisRepository
-	jwt       *jwt.JWT
+	userRepo   repository.UserRepository
+	cachedRepo repository.CacheRepository
+	jwt        *jwt.JWT
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
-	redisRepo repository.RedisRepository,
+	cachedRepo repository.CacheRepository,
 	jwt *jwt.JWT,
 ) AuthService {
 	return &authService{
-		userRepo:  userRepo,
-		redisRepo: redisRepo,
-		jwt:       jwt,
+		userRepo:   userRepo,
+		cachedRepo: cachedRepo,
+		jwt:        jwt,
 	}
 }
 
