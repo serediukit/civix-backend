@@ -1,11 +1,10 @@
-package service
+package auth
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	"github.com/serediukit/civix-backend/internal/config"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/pkg/jwt"

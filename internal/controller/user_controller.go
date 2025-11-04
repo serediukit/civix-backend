@@ -4,15 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/middleware"
 	"github.com/serediukit/civix-backend/internal/model"
-	"github.com/serediukit/civix-backend/internal/service"
+	"github.com/serediukit/civix-backend/internal/services/user"
 	"github.com/serediukit/civix-backend/internal/util"
 )
 
 type UserController struct {
-	userService service.UserService
+	userService user.UserService
 }
 
-func NewUserController(userService service.UserService) *UserController {
+func NewUserController(userService user.UserService) *UserController {
 	return &UserController{
 		userService: userService,
 	}

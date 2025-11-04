@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/serediukit/civix-backend/internal/repository"
+	"github.com/serediukit/civix-backend/internal/services/auth"
+	"github.com/serediukit/civix-backend/internal/services/reports"
+	"github.com/serediukit/civix-backend/internal/services/user"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +18,6 @@ import (
 	"github.com/serediukit/civix-backend/internal/config"
 	"github.com/serediukit/civix-backend/internal/controller"
 	"github.com/serediukit/civix-backend/internal/middleware"
-	"github.com/serediukit/civix-backend/internal/service"
-	"github.com/serediukit/civix-backend/internal/util"
 	"github.com/serediukit/civix-backend/pkg/database"
 	"github.com/serediukit/civix-backend/pkg/jwt"
 	"github.com/serediukit/civix-backend/pkg/redis"
@@ -50,23 +52,37 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	userRepo := repository.NewUserRepository(db)
+	reportRepo := repository.NewReportRepository(db)
+	cacheRepo := repository.NewCacheRepository(redisClient)
+
 	// Initialize utilities
 	jwt := jwt.NewJWT(config.GetJWTConfig())
 
 	// Initialize services
-	authService := service.NewAuthService(userRepo, redisRepo, config, jwt)
-	userService := service.NewUserService(userRepo)
+	authService := auth.NewAuthService(userRepo, cacheRepo, config, jwt)
+	userService := user.NewUserService(userRepo)
+	reportService := reports.NewReportService(reportRepo)
 
 	// Initialize controllers
 	authController := controller.NewAuthController(authService)
 	userController := controller.NewUserController(userService)
+	reportController := controller.NewReportController(reportService)
 
 	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(jwtUtil, redisRepo)
+	authMiddleware := middleware.NewAuthMiddleware(jwt, cacheRepo)
 
 	// Create router
-	router := setupRouter(authController, userController, authMiddleware)
+	router := setupRouter(authController, userController, reportController, authMiddleware)
 
+	if err = startServer(config, router); err != nil {
+		log.Fatalf("Failed server: %v", err)
+	}
+
+	log.Println("Server exiting")
+}
+
+func startServer(config *config.Config, router *gin.Engine) error {
 	// Create HTTP server
 	srv := &http.Server{
 		Addr:    ":" + config.Server.Port,
@@ -94,12 +110,13 @@ func main() {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server exiting")
+	return nil
 }
 
 func setupRouter(
 	authController *controller.AuthController,
 	userController *controller.UserController,
+	reportController *controller.ReportController,
 	authMiddleware *middleware.AuthMiddleware,
 ) *gin.Engine {
 	r := gin.New()

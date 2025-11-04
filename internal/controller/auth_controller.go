@@ -1,20 +1,20 @@
 package controller
 
 import (
+	"github.com/serediukit/civix-backend/internal/services/auth"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/middleware"
 	"github.com/serediukit/civix-backend/internal/model"
-	"github.com/serediukit/civix-backend/internal/service"
 	"github.com/serediukit/civix-backend/internal/util"
 )
 
 type AuthController struct {
-	authService service.AuthService
+	authService auth.AuthService
 }
 
-func NewAuthController(authService service.AuthService) *AuthController {
+func NewAuthController(authService auth.AuthService) *AuthController {
 	return &AuthController{
 		authService: authService,
 	}
