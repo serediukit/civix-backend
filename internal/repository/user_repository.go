@@ -3,52 +3,97 @@ package repository
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/pkg/errors"
+	"github.com/serediukit/civix-backend/pkg/timeutil"
+
+	"github.com/serediukit/civix-backend/internal/db"
 	"github.com/serediukit/civix-backend/internal/model"
-	"gorm.io/gorm"
+	"github.com/serediukit/civix-backend/pkg/database"
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, user *model.User) error
-	FindByID(ctx context.Context, id uint) (*model.User, error)
-	FindByEmail(ctx context.Context, email string) (*model.User, error)
-	Update(ctx context.Context, user *model.User) error
-	Delete(ctx context.Context, id uint) error
+	CreateUser(ctx context.Context, user *model.User) error
+	FindUserByID(ctx context.Context, id uint64) (*model.User, error)
+	// FindByEmail(ctx context.Context, email string) (*model.User, error)
+	// Update(ctx context.Context, user *model.User) error
+	// Delete(ctx context.Context, id uint) error
 }
 
 type userRepository struct {
-	db *gorm.DB
+	store *database.Store
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{db: db}
+func NewUserRepository(store *database.Store) UserRepository {
+	return &userRepository{store: store}
 }
 
-func (r *userRepository) Create(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Create(user).Error
-}
+func (r *userRepository) CreateUser(ctx context.Context, user *model.User) error {
+	createdAt := timeutil.Now()
 
-func (r *userRepository) FindByID(ctx context.Context, id uint) (*model.User, error) {
-	var user model.User
-	err := r.db.WithContext(ctx).First(&user, id).Error
+	sql, args, err := db.SB().
+		Insert(db.TableUsers).
+		Columns(
+			db.TableUsersColumnEmail,
+			db.TableUsersColumnPasswordHash,
+			db.TableUsersColumnName,
+			db.TableUsersColumnCreatedAt,
+			db.TableUsersColumnUpdatedAt,
+		).
+		Values(
+			user.Email,
+			user.PasswordHash,
+			user.Name,
+			createdAt,
+			createdAt,
+		).
+		ToSql()
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "Create user [%s]", user.Email)
 	}
-	return &user, nil
-}
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
-	var user model.User
-	err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	_, err = r.store.GetDB().Exec(ctx, sql, args...)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "Create user [%s]", user.Email)
 	}
-	return &user, nil
+
+	return nil
 }
 
-func (r *userRepository) Update(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Save(user).Error
-}
+func (r *userRepository) FindUserByID(ctx context.Context, id uint64) (*model.User, error) {
+	sql, args, err := db.SB().
+		Select(
+			db.TableUsersColumnUserID,
+			db.TableUsersColumnEmail,
+			db.TableUsersColumnName,
+			db.TableUsersColumnCreatedAt,
+			db.TableUsersColumnUpdatedAt,
+		).
+		From(db.TableUsers).
+		Where(db.TableUsersColumnUserID+" = ?", id).
+		Where(db.TableUsersColumnDeletedAt + " IS NULL").
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Get user by id [%d]", id)
+	}
 
-func (r *userRepository) Delete(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&model.User{}, id).Error
+	var user *model.User
+
+	err = r.store.GetDB().
+		QueryRow(ctx, sql, args...).
+		Scan(
+			&user.UserID,
+			&user.Email,
+			&user.Name,
+			&user.CreatedAt,
+			&user.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = db.ErrNotFound
+		}
+
+		return nil, errors.Wrapf(err, "Get user by id [%d]", id)
+	}
+
+	return user, nil
 }

@@ -32,7 +32,7 @@ func (s *userService) GetProfile(ctx context.Context, userID uint) (*model.UserR
 	}
 
 	return &model.UserResponse{
-		ID:        user.ID,
+		ID:        user.UserID,
 		Email:     user.Email,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
@@ -53,7 +53,7 @@ func (s *userService) UpdateProfile(ctx context.Context, userID uint, req *model
 	if req.Email != "" && req.Email != user.Email {
 		// Check if new email is already taken
 		existingUser, err := s.userRepo.FindByEmail(ctx, req.Email)
-		if err == nil && existingUser != nil && existingUser.ID != userID {
+		if err == nil && existingUser != nil && existingUser.UserID != userID {
 			return nil, errors.New("email already in use")
 		}
 		user.Email = req.Email
@@ -64,7 +64,7 @@ func (s *userService) UpdateProfile(ctx context.Context, userID uint, req *model
 	}
 
 	return &model.UserResponse{
-		ID:        user.ID,
+		ID:        user.UserID,
 		Email:     user.Email,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt,

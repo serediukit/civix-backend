@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID        uint           `json:"id" gorm:"primaryKey"`
-	Email     string         `json:"email" gorm:"uniqueIndex;not null"`
-	Password  string         `json:"-" gorm:"not null"`
-	Name      string         `json:"name" gorm:"not null"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	UserID       uint64         `json:"user_id"`
+	Email        string         `json:"email"`
+	PasswordHash string         `json:"-"`
+	Name         string         `json:"name"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"-"`
 }
 
 type CreateUserRequest struct {
@@ -55,7 +55,7 @@ func (u *User) CheckPassword(password string) error {
 
 func (u *User) ToResponse() UserResponse {
 	return UserResponse{
-		ID:        u.ID,
+		ID:        u.UserID,
 		Email:     u.Email,
 		Name:      u.Name,
 		CreatedAt: u.CreatedAt,

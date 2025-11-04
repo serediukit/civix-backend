@@ -18,7 +18,7 @@ func (s *Store) Close() {
 
 func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		"db://%s:%s@%s:%s/%s?sslmode=%s",
 		config.User,
 		config.Password,
 		config.Host,
@@ -41,4 +41,8 @@ func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
 	return &Store{
 		db: pool,
 	}, nil
+}
+
+func (s *Store) GetDB() *pgxpool.Pool {
+	return s.db
 }

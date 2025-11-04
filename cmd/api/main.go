@@ -39,11 +39,11 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize database connections
-	db, err := database.NewDB(ctx, config.GetDBConfig())
+	store, err := database.NewDB(ctx, config.GetDBConfig())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
 	// Initialize Redis
 	redisClient, err := redis.NewRedis(config.GetRedisConfig())
@@ -52,8 +52,8 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	userRepo := repository.NewUserRepository(db)
-	reportRepo := repository.NewReportRepository(db)
+	userRepo := repository.NewUserRepository(store)
+	// reportRepo := repository.NewReportRepository(db)
 	cacheRepo := repository.NewCacheRepository(redisClient)
 
 	// Initialize utilities
@@ -62,18 +62,18 @@ func main() {
 	// Initialize services
 	authService := auth.NewAuthService(userRepo, cacheRepo, config, jwt)
 	userService := user.NewUserService(userRepo)
-	reportService := reports.NewReportService(reportRepo)
+	// reportService := reports.NewReportService(reportRepo)
 
 	// Initialize controllers
 	authController := controller.NewAuthController(authService)
 	userController := controller.NewUserController(userService)
-	reportController := controller.NewReportController(reportService)
+	// reportController := controller.NewReportController(reportService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwt, cacheRepo)
 
 	// Create router
-	router := setupRouter(authController, userController, reportController, authMiddleware)
+	router := setupRouter(authController, userController, authMiddleware)
 
 	if err = startServer(config, router); err != nil {
 		log.Fatalf("Failed server: %v", err)
@@ -116,7 +116,7 @@ func startServer(config *config.Config, router *gin.Engine) error {
 func setupRouter(
 	authController *controller.AuthController,
 	userController *controller.UserController,
-	reportController *controller.ReportController,
+	// reportController *controller.ReportController,
 	authMiddleware *middleware.AuthMiddleware,
 ) *gin.Engine {
 	r := gin.New()
@@ -156,7 +156,15 @@ func setupRouter(
 			users.DELETE("/me", userController.DeleteAccount)
 		}
 
-		// Add more routes here...
+		// // Report routes
+		// reports := v1.Group("/reports")
+		// reports.Use(authMiddleware.AuthRequired())
+		// {
+		// 	reports.GET("/", reportController.GetReports)
+		// 	reports.POST("/", reportController.CreateReport)
+		// 	reports.PUT("/:id", reportController.UpdateReport)
+		// 	reports.DELETE("/:id", reportController.DeleteReport)
+		// }
 	}
 
 	return r

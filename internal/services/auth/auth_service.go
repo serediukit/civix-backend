@@ -54,7 +54,7 @@ func (s *authService) Register(ctx context.Context, req *model.CreateUserRequest
 	}
 
 	return &model.UserResponse{
-		ID:        user.ID,
+		ID:        user.UserID,
 		Email:     user.Email,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
@@ -74,7 +74,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*model
 	}
 
 	// Generate access token
-	tokenString, err := s.jwt.GenerateToken(user.ID, user.Email)
+	tokenString, err := s.jwt.GenerateToken(user.UserID, user.Email)
 	if err != nil {
 		return nil, err
 	}

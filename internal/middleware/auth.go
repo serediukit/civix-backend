@@ -73,7 +73,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 	}
 }
 
-// GetUserIDFromContext retrieves the user ID from the context
+// GetUserIDFromContext retrieves the user UserID from the context
 func GetUserIDFromContext(ctx context.Context) (uint, bool) {
 	userID, ok := ctx.Value("user_id").(uint)
 	return userID, ok
