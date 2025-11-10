@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
+	"github.com/serediukit/civix-backend/pkg/util/timeutil"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
-	"github.com/serediukit/civix-backend/pkg/timeutil"
-
 	"github.com/serediukit/civix-backend/internal/db"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/pkg/database"

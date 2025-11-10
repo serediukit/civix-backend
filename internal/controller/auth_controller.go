@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/services/auth"
-	"github.com/serediukit/civix-backend/pkg/hash"
+	"github.com/serediukit/civix-backend/pkg/util/response"
 )
 
 type AuthController struct {
@@ -20,33 +20,33 @@ func NewAuthController(authService auth.AuthService) *AuthController {
 func (c *AuthController) Register(ctx *gin.Context) {
 	var req contracts.RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		hash.BadRequest(ctx, "Invalid request body", err)
+		response.BadRequest(ctx, "Invalid request body", err)
 		return
 	}
 
 	user, err := c.authService.Register(ctx.Request.Context(), &req)
 	if err != nil {
-		hash.BadRequest(ctx, "Failed to create user", err)
+		response.BadRequest(ctx, "Failed to create user", err)
 		return
 	}
 
-	hash.Created(ctx, user)
+	response.Created(ctx, user)
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {
 	var req contracts.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		hash.BadRequest(ctx, "Invalid request body", err)
+		response.BadRequest(ctx, "Invalid request body", err)
 		return
 	}
 
 	resp, err := c.authService.Login(ctx.Request.Context(), &req)
 	if err != nil {
-		hash.Unauthorized(ctx, "Invalid credentials", err)
+		response.Unauthorized(ctx, "Invalid credentials", err)
 		return
 	}
 
-	hash.Success(ctx, resp)
+	response.Success(ctx, resp)
 }
 
 //

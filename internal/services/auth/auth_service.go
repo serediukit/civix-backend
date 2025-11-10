@@ -107,7 +107,7 @@ func (s *authService) Login(ctx context.Context, req *contracts.LoginRequest) (*
 // 		return err
 // 	}
 //
-// 	expiresIn := time.Until(claims.ExpiresAt.Time)
+// 	expiresIn := timeutil.Until(claims.ExpiresAt.Time)
 // 	return s.cachedRepo.SetBlacklist(ctx, tokenString, expiresIn)
 // }
 //
@@ -133,7 +133,7 @@ func (s *authService) Login(ctx context.Context, req *contracts.LoginRequest) (*
 // 		return nil, err
 // 	}
 //
-// 	// Get new token expiration time
+// 	// Get new token expiration timeutil
 // 	newToken, _ := s.jwt.ValidateToken(newTokenString)
 //
 // 	// Add old token to blacklist

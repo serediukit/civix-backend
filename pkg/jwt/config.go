@@ -1,10 +1,10 @@
 package jwt
 
 import (
+	"github.com/serediukit/civix-backend/pkg/util/timeutil"
 	"time"
 
 	"github.com/serediukit/civix-backend/pkg/env"
-	"github.com/serediukit/civix-backend/pkg/timeutil"
 )
 
 type JWTConfig struct {
