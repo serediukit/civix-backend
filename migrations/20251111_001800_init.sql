@@ -10,3 +10,5 @@ CREATE TABLE users
 );
 
 CREATE UNIQUE INDEX users_email_unique_index ON users (email);
+
+insert into users values (10, '<EMAIL>', 'password', 'test user', now(), now(), null);
