@@ -18,8 +18,6 @@ func NewAuthController(authService auth.AuthService) *AuthController {
 }
 
 func (c *AuthController) Register(ctx *gin.Context) {
-	util.Success(ctx, "hehe")
-
 	var req model.CreateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		util.BadRequest(ctx, "Invalid request body", err)

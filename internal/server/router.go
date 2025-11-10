@@ -1,7 +1,6 @@
-package main
+package server
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,8 +27,6 @@ func setupRouter(
 			"status": "ok",
 		})
 	})
-
-	log.Println("I WAS HERE 2")
 
 	// API v1
 	v1 := r.Group("/api/v1")
@@ -64,8 +61,6 @@ func setupRouter(
 		// 	reports.DELETE("/:id", reportController.DeleteReport)
 		// }
 	}
-
-	log.Println("I WAS HERE 3")
 
 	return r
 }

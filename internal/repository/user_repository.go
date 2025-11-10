@@ -49,12 +49,12 @@ func (r *userRepository) CreateUser(ctx context.Context, user *model.User) error
 		).
 		ToSql()
 	if err != nil {
-		return errors.Wrapf(err, "Create user [%s]", user.Email)
+		return errors.Wrapf(err, "Create user [%s] ToSQL: %s, %+v", user.Email, sql, args)
 	}
 
 	_, err = r.store.GetDB().Exec(ctx, sql, args...)
 	if err != nil {
-		return errors.Wrapf(err, "Create user [%s]", user.Email)
+		return errors.Wrapf(err, "Create user [%s] Exec: %s, %+v", user.Email, sql, args)
 	}
 
 	return nil

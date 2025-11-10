@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/serediukit/civix-backend/internal/server"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -12,16 +13,14 @@ func main() {
 	_ = godotenv.Load()
 
 	// Initialize configuration
-	config, err := config.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	server := NewServer(config)
+	s := server.NewServer(cfg)
 
-	server.setup()
-
-	if err = server.run(); err != nil {
+	if err = s.Run(); err != nil {
 		log.Fatalf("Failed server: %v", err)
 	}
 

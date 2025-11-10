@@ -25,7 +25,7 @@ func GetRedisConfig() *RedisConfig {
 		DB:           env.GetEnvInt("REDIS_DB", 0),
 		PoolSize:     env.GetEnvInt("REDIS_POOLSIZE", 10),
 		MinIdleConns: env.GetEnvInt("REDIS_MIDIDLECONNS", 5),
-		DialTimeout:  env.GetEnvDurationSeconds("REDIS_DB", 5),
-		ReadTimeout:  env.GetEnvDurationSeconds("REDIS_DB", 5),
+		DialTimeout:  env.GetEnvDurationSeconds("REDIS_DB", 5*time.Second),
+		ReadTimeout:  env.GetEnvDurationSeconds("REDIS_DB", 5*time.Second),
 	}
 }

@@ -14,6 +14,8 @@ type Store struct {
 
 func (s *Store) Close() {
 	s.db.Close()
+
+	log.Println("[PostgreSQL] connection closed")
 }
 
 func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
