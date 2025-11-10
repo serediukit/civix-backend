@@ -1,4 +1,4 @@
-package util
+package hash
 
 import "github.com/gin-gonic/gin"
 

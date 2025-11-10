@@ -3,16 +3,16 @@ package auth
 import (
 	"context"
 	"errors"
-
+	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
-	"github.com/serediukit/civix-backend/internal/util"
+	"github.com/serediukit/civix-backend/pkg/hash"
 	"github.com/serediukit/civix-backend/pkg/jwt"
 )
 
 type AuthService interface {
-	Register(ctx context.Context, req *model.CreateUserRequest) (*model.UserResponse, error)
-	// Login(ctx context.Context, email, password string) (*model.Token, error)
+	Register(ctx context.Context, req *contracts.RegisterRequest) (*contracts.RegisterResponse, error)
+	Login(ctx context.Context, req *contracts.LoginRequest) (*contracts.LoginResponse, error)
 	// Logout(ctx context.Context, tokenString string) error
 	// RefreshToken(ctx context.Context, tokenString string) (*model.Token, error)
 }
@@ -35,22 +35,20 @@ func NewAuthService(
 	}
 }
 
-func (s *authService) Register(ctx context.Context, req *model.CreateUserRequest) (*model.UserResponse, error) {
-	// Check if user already exists
+func (s *authService) Register(ctx context.Context, req *contracts.RegisterRequest) (*contracts.RegisterResponse, error) {
 	existingUser, err := s.userRepo.GetUserByEmail(ctx, req.Email)
 	if err == nil && existingUser != nil {
 		return nil, errors.New("user with this email already exists")
 	}
 
-	hashedPassword, err := util.HashPassword(req.Password)
+	hashedPassword, err := hash.Hash(req.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create new user
 	user := &model.User{
 		Email:        req.Email,
-		PasswordHash: hashedPassword, // Will be hashed by BeforeCreate hook
+		PasswordHash: hashedPassword,
 		Name:         req.Name,
 	}
 
@@ -58,40 +56,49 @@ func (s *authService) Register(ctx context.Context, req *model.CreateUserRequest
 		return nil, err
 	}
 
-	return &model.UserResponse{
-		ID:        user.UserID,
+	return &contracts.RegisterResponse{
 		Email:     user.Email,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt,
 	}, nil
 }
 
-// func (s *authService) Login(ctx context.Context, email, password string) (*model.Token, error) {
-// 	// Find user by email
-// 	user, err := s.userRepo.FindByEmail(ctx, email)
-// 	if err != nil {
-// 		return nil, errors.New("invalid credentials")
-// 	}
-//
-// 	// Verify password
-// 	if err := user.CheckPassword(password); err != nil {
-// 		return nil, errors.New("invalid credentials")
-// 	}
-//
-// 	// Generate access token
-// 	tokenString, err := s.jwt.GenerateToken(user.UserID, user.Email)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	// Get token expiration time
-// 	token, _ := s.jwt.ValidateToken(tokenString)
-//
-// 	return &model.Token{
-// 		AccessToken: tokenString,
-// 		ExpiresAt:   token.ExpiresAt.Unix(),
-// 	}, nil
-// }
+func (s *authService) Login(ctx context.Context, req *contracts.LoginRequest) (*contracts.LoginResponse, error) {
+	user, err := s.userRepo.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, errors.New("user with this email does not exist")
+	}
+
+	if err = hash.CheckHash(req.Password, user.PasswordHash); err != nil {
+		return nil, errors.New("incorrect email or password")
+	}
+
+	accessTokenString, err := s.jwt.GenerateAccessToken(user.UserID, user.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, _ := s.jwt.ValidateToken(accessTokenString)
+
+	refreshTokenString, err := s.jwt.GenerateRefreshToken(user.UserID, user.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, _ := s.jwt.ValidateToken(refreshTokenString)
+
+	return &contracts.LoginResponse{
+		AccessToken: model.Token{
+			Token:     accessTokenString,
+			ExpiresAt: accessToken.ExpiresAt.Unix(),
+		},
+		RefreshToken: model.Token{
+			Token:     refreshTokenString,
+			ExpiresAt: refreshToken.ExpiresAt.Unix(),
+		},
+	}, nil
+}
+
 //
 // func (s *authService) Logout(ctx context.Context, tokenString string) error {
 // 	// Add token to blacklist

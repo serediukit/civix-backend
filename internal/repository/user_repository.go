@@ -103,6 +103,7 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 		Select(
 			db.TableUsersColumnUserID,
 			db.TableUsersColumnEmail,
+			db.TableUsersColumnPasswordHash,
 			db.TableUsersColumnName,
 			db.TableUsersColumnCreatedAt,
 			db.TableUsersColumnUpdatedAt,
@@ -122,6 +123,7 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 		Scan(
 			&user.UserID,
 			&user.Email,
+			&user.PasswordHash,
 			&user.Name,
 			&user.CreatedAt,
 			&user.UpdatedAt)

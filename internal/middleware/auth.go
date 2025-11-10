@@ -3,11 +3,11 @@ package middleware
 import (
 	"context"
 	"errors"
+	"github.com/serediukit/civix-backend/pkg/hash"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/repository"
-	"github.com/serediukit/civix-backend/internal/util"
 	"github.com/serediukit/civix-backend/pkg/jwt"
 )
 
@@ -28,7 +28,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			util.Unauthorized(c, "Authorization header is required", errors.New("missing authorization header"))
+			hash.Unauthorized(c, "Authorization header is required", errors.New("missing authorization header"))
 			c.Abort()
 			return
 		}
@@ -36,7 +36,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 		// Check if the token starts with "Bearer "
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			util.Unauthorized(c, "Invalid authorization header format", errors.New("invalid token format"))
+			hash.Unauthorized(c, "Invalid authorization header format", errors.New("invalid token format"))
 			c.Abort()
 			return
 		}
@@ -46,13 +46,13 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 		// Check if token is blacklisted
 		blacklisted, err := m.redisRepo.IsBlacklisted(c.Request.Context(), tokenString)
 		if err != nil {
-			util.InternalServerError(c, "Failed to verify token", err)
+			hash.InternalServerError(c, "Failed to verify token", err)
 			c.Abort()
 			return
 		}
 
 		if blacklisted {
-			util.Unauthorized(c, "Token has been revoked", errors.New("token revoked"))
+			hash.Unauthorized(c, "Token has been revoked", errors.New("token revoked"))
 			c.Abort()
 			return
 		}
@@ -60,7 +60,7 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 		// Validate token
 		claims, err := m.jwtUtil.ValidateToken(tokenString)
 		if err != nil {
-			util.Unauthorized(c, "Invalid or expired token", err)
+			hash.Unauthorized(c, "Invalid or expired token", err)
 			c.Abort()
 			return
 		}

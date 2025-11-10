@@ -28,13 +28,24 @@ func NewJWT(config *JWTConfig) *JWT {
 }
 
 type Claims struct {
-	UserID uint   `json:"user_id"`
+	UserID uint64 `json:"user_id"`
 	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-func (j *JWT) GenerateToken(userID uint, email string) (string, error) {
+func (j *JWT) GenerateAccessToken(userID uint64, email string) (string, error) {
 	expirationTime := time.Now().Add(j.accessTokenExpiration)
+
+	return j.generateToken(userID, email, expirationTime)
+}
+
+func (j *JWT) GenerateRefreshToken(userID uint64, email string) (string, error) {
+	expirationTime := time.Now().Add(j.refreshTokenExpiration)
+
+	return j.generateToken(userID, email, expirationTime)
+}
+
+func (j *JWT) generateToken(userID uint64, email string, expirationTime time.Time) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,
