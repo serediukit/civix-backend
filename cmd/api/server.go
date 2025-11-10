@@ -73,11 +73,15 @@ func (s *Server) setup() {
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwt, cacheRepo)
 
+	log.Println("I WAS HERE 1")
+
 	// Create router
 	s.router = setupRouter(authController, authMiddleware)
 }
 
 func (s *Server) run() error {
+	log.Println("I WAS HERE 4")
+
 	srv := &http.Server{
 		Addr:    ":" + s.config.Server.Port,
 		Handler: s.router,
@@ -85,6 +89,7 @@ func (s *Server) run() error {
 
 	go func() {
 		log.Printf("Server is running on port %s\n", s.config.Server.Port)
+		log.Println("I WAS HERE 5")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server: %v", err)
 		}

@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
+
+var retriesCount = 5
 
 type CachedStore struct {
 	client *redis.Client
@@ -29,15 +32,31 @@ func NewRedis(config *RedisConfig) (*CachedStore, error) {
 		ReadTimeout:  config.ReadTimeout,
 	})
 
-	_, err := client.Ping(context.Background()).Result()
-	if err != nil {
-		log.Fatalf("[Redis] Unable to ping: %v\n", err)
-		return nil, err
+	log.Println(fmt.Sprintf("%s:%s", config.Host, config.Port))
+	log.Println(config.Password)
+	log.Println(config.DB)
+	log.Println(config.PoolSize)
+	log.Println(config.MinIdleConns)
+	log.Println(config.DialTimeout)
+	log.Println(config.ReadTimeout)
+
+	var err error
+
+	for retriesCount > 0 {
+		_, err = client.Ping(context.Background()).Result()
+		if err == nil {
+			return &CachedStore{
+				client: client,
+			}, nil
+		}
+		log.Println("Waiting for Redis...")
+		time.Sleep(2 * time.Second)
+
+		retriesCount--
 	}
 
-	return &CachedStore{
-		client: client,
-	}, nil
+	log.Fatalf("[Redis] Unable to ping: %v\n", err)
+	return nil, err
 }
 
 func (s *CachedStore) GetClient() *redis.Client {

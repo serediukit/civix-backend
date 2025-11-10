@@ -8,14 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/internal/util"
+	"github.com/serediukit/civix-backend/pkg/jwt"
 )
 
 type AuthMiddleware struct {
-	jwtUtil   *util.JWTUtil
+	jwtUtil   *jwt.JWT
 	redisRepo repository.CacheRepository
 }
 
-func NewAuthMiddleware(jwtUtil *util.JWTUtil, redisRepo repository.CacheRepository) *AuthMiddleware {
+func NewAuthMiddleware(jwtUtil *jwt.JWT, redisRepo repository.CacheRepository) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtUtil:   jwtUtil,
 		redisRepo: redisRepo,

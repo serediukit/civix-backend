@@ -19,6 +19,8 @@ func main() {
 
 	server := NewServer(config)
 
+	server.setup()
+
 	if err = server.run(); err != nil {
 		log.Fatalf("Failed server: %v", err)
 	}

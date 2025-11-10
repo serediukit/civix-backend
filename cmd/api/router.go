@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ func setupRouter(
 	authController *controller.AuthController,
 	// userController *controller.UserController,
 	// reportController *controller.ReportController,
-	authMiddleware *middleware.AuthMiddleware,
+	_ *middleware.AuthMiddleware,
 ) *gin.Engine {
 	r := gin.New()
 
@@ -28,6 +29,8 @@ func setupRouter(
 		})
 	})
 
+	log.Println("I WAS HERE 2")
+
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
@@ -35,10 +38,10 @@ func setupRouter(
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/register", authController.Register)
-			auth.POST("/login", authController.Login)
-			auth.POST("/logout", authMiddleware.AuthRequired(), authController.Logout)
-			auth.POST("/refresh", authController.RefreshToken)
-			auth.GET("/me", authMiddleware.AuthRequired(), authController.GetMe)
+			// auth.POST("/login", authController.Login)
+			// auth.POST("/logout", authMiddleware.AuthRequired(), authController.Logout)
+			// auth.POST("/refresh", authController.RefreshToken)
+			// auth.GET("/me", authMiddleware.AuthRequired(), authController.GetMe)
 		}
 
 		// // User routes
@@ -61,6 +64,8 @@ func setupRouter(
 		// 	reports.DELETE("/:id", reportController.DeleteReport)
 		// }
 	}
+
+	log.Println("I WAS HERE 3")
 
 	return r
 }

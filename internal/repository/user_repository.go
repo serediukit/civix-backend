@@ -15,7 +15,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByID(ctx context.Context, id uint64) (*model.User, error)
-	// FindByEmail(ctx context.Context, email string) (*model.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	// Update(ctx context.Context, user *model.User) error
 	// Delete(ctx context.Context, id uint) error
 }
@@ -77,7 +77,7 @@ func (r *userRepository) GetUserByID(ctx context.Context, id uint64) (*model.Use
 		return nil, errors.Wrapf(err, "Get user by id [%d]", id)
 	}
 
-	var user *model.User
+	var user model.User
 
 	err = r.store.GetDB().
 		QueryRow(ctx, sql, args...).
@@ -95,5 +95,43 @@ func (r *userRepository) GetUserByID(ctx context.Context, id uint64) (*model.Use
 		return nil, errors.Wrapf(err, "Get user by id [%d]", id)
 	}
 
-	return user, nil
+	return &user, nil
+}
+
+func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	sql, args, err := db.SB().
+		Select(
+			db.TableUsersColumnUserID,
+			db.TableUsersColumnEmail,
+			db.TableUsersColumnName,
+			db.TableUsersColumnCreatedAt,
+			db.TableUsersColumnUpdatedAt,
+		).
+		From(db.TableUsers).
+		Where(db.TableUsersColumnEmail+" = ?", email).
+		Where(db.TableUsersColumnDeletedAt + " IS NULL").
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Get user by email [%s]", email)
+	}
+
+	var user model.User
+
+	err = r.store.GetDB().
+		QueryRow(ctx, sql, args...).
+		Scan(
+			&user.UserID,
+			&user.Email,
+			&user.Name,
+			&user.CreatedAt,
+			&user.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = db.ErrNotFound
+		}
+
+		return nil, errors.Wrapf(err, "Get user by email [%s]", email)
+	}
+
+	return &user, nil
 }

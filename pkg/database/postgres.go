@@ -17,17 +17,17 @@ func (s *Store) Close() {
 }
 
 func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
-	connStr := fmt.Sprintf(
-		"db://%s:%s@%s:%s/%s?sslmode=%s",
-		config.User,
-		config.Password,
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		config.Host,
 		config.Port,
+		config.User,
+		config.Password,
 		config.Name,
 		config.SSLMode,
 	)
 
-	pool, err := pgxpool.New(ctx, connStr)
+	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		log.Fatalf("[PostgreSQL] Unable to connect: %v\n", err)
 		return nil, err
