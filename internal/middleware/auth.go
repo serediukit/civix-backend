@@ -33,7 +33,6 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Check if the token starts with "Bearer "
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			response.Unauthorized(c, "Invalid authorization header format", errors.New("invalid token format"))
@@ -43,7 +42,6 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 
 		tokenString := parts[1]
 
-		// Check if token is blacklisted
 		blacklisted, err := m.redisRepo.IsBlacklisted(c.Request.Context(), tokenString)
 		if err != nil {
 			response.InternalServerError(c, "Failed to verify token", err)
@@ -57,7 +55,6 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Validate token
 		claims, err := m.jwtUtil.ValidateToken(tokenString)
 		if err != nil {
 			response.Unauthorized(c, "Invalid or expired token", err)
@@ -65,7 +62,6 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Add user info to context
 		ctx := context.WithValue(c.Request.Context(), "user_id", claims.UserID)
 		ctx = context.WithValue(ctx, "user_email", claims.Email)
 		c.Request = c.Request.WithContext(ctx)
@@ -74,13 +70,11 @@ func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 	}
 }
 
-// GetUserIDFromContext retrieves the user UserID from the context
 func GetUserIDFromContext(ctx context.Context) (uint, bool) {
 	userID, ok := ctx.Value("user_id").(uint)
 	return userID, ok
 }
 
-// GetUserEmailFromContext retrieves the user email from the context
 func GetUserEmailFromContext(ctx context.Context) (string, bool) {
 	email, ok := ctx.Value("user_email").(string)
 	return email, ok

@@ -101,14 +101,14 @@ func (s *authService) Login(ctx context.Context, req *contracts.LoginRequest) (*
 	}, nil
 }
 
-func (s *authService) Logout(ctx context.Context, tokenString string) error {
-	claims, err := s.jwt.ValidateToken(tokenString)
-	if err != nil {
-		return err
-	}
+func (s *authService) Logout(ctx context.Context, req *contracts.LogoutRequest) error {
+	errAccess := s.removeToken(ctx, req.AccessToken)
+	errRefresh := s.removeToken(ctx, req.RefreshToken)
 
-	expiresIn := time.Until(claims.ExpiresAt.Time)
-	return s.cachedRepo.SetBlacklist(ctx, tokenString, expiresIn)
+	if errAccess != nil || errRefresh != nil {
+		return errors.New("failed to logout")
+	}
+	return nil
 }
 
 func (s *authService) RefreshToken(ctx context.Context, req *contracts.RefreshTokenRequest) (*contracts.RefreshTokenResponse, error) {
@@ -153,4 +153,15 @@ func (s *authService) RefreshToken(ctx context.Context, req *contracts.RefreshTo
 			ExpiresAt: refreshToken.ExpiresAt.Unix(),
 		},
 	}, nil
+}
+
+func (s *authService) removeToken(ctx context.Context, token string) error {
+	claims, err := s.jwt.ValidateToken(token)
+	if err != nil {
+		return nil
+	}
+
+	expiresIn := time.Until(claims.ExpiresAt.Time)
+
+	return s.cachedRepo.SetBlacklist(ctx, token, expiresIn)
 }

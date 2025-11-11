@@ -51,14 +51,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 }
 
 func (c *AuthController) Logout(ctx *gin.Context) {
-	authHeader := ctx.GetHeader("Authorization")
-	if authHeader == "" {
-		response.Unauthorized(ctx, "Authorization header is required", nil)
+	var req contracts.LogoutRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(ctx, "Invalid request body", err)
 		return
 	}
 
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	if err := c.authService.Logout(ctx.Request.Context(), tokenString); err != nil {
+	if err := c.authService.Logout(ctx.Request.Context(), &req); err != nil {
 		response.InternalServerError(ctx, "Failed to logout", err)
 		return
 	}

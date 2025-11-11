@@ -28,10 +28,15 @@ type LoginResponse struct {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
 type RefreshTokenResponse struct {
 	AccessToken  model.Token `json:"access_token"`
 	RefreshToken model.Token `json:"refresh_token"`
+}
+
+type LogoutRequest struct {
+	AccessToken  string `json:"access_token" binding:"required"`
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }
