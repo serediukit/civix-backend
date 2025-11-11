@@ -12,7 +12,7 @@ func setupRouter(
 	authController *controller.AuthController,
 	// userController *controller.UserController,
 	// reportController *controller.ReportController,
-	_ *middleware.AuthMiddleware,
+	authMiddleware *middleware.AuthMiddleware,
 ) *gin.Engine {
 	r := gin.New()
 
@@ -36,8 +36,8 @@ func setupRouter(
 		{
 			auth.POST("/register", authController.Register)
 			auth.POST("/login", authController.Login)
-			// auth.POST("/logout", authMiddleware.AuthRequired(), authController.Logout)
-			//auth.POST("/refresh", authController.RefreshToken)
+			auth.POST("/logout", authMiddleware.AuthRequired(), authController.Logout)
+			auth.POST("/refresh", authController.RefreshToken)
 		}
 
 		// // User routes

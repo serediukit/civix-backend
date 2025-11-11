@@ -22,11 +22,11 @@ func NewCacheRepository(cachedStore *redis.CachedStore) CacheRepository {
 }
 
 func (r *cacheRepository) SetBlacklist(ctx context.Context, token string, expiration time.Duration) error {
-	return r.cachedStore.GetClient().Set(ctx, "blacklist:"+token, "1", expiration).Err()
+	return r.cachedStore.GetClient().Set(ctx, getTokenBlacklistKey(token), "1", expiration).Err()
 }
 
 func (r *cacheRepository) IsBlacklisted(ctx context.Context, token string) (bool, error) {
-	val, err := r.cachedStore.GetClient().Exists(ctx, "blacklist:"+token).Result()
+	val, err := r.cachedStore.GetClient().Exists(ctx, getTokenBlacklistKey(token)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -35,4 +35,8 @@ func (r *cacheRepository) IsBlacklisted(ctx context.Context, token string) (bool
 
 func (r *cacheRepository) Delete(ctx context.Context, key string) error {
 	return r.cachedStore.GetClient().Del(ctx, key).Err()
+}
+
+func getTokenBlacklistKey(token string) string {
+	return "auth:token:blacklist:" + token
 }

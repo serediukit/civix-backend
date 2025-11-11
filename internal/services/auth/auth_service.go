@@ -8,13 +8,15 @@ import (
 	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/pkg/hash"
 	"github.com/serediukit/civix-backend/pkg/jwt"
+	"github.com/serediukit/civix-backend/pkg/util/timeutil"
+	"time"
 )
 
 type AuthService interface {
 	Register(ctx context.Context, req *contracts.RegisterRequest) (*contracts.RegisterResponse, error)
 	Login(ctx context.Context, req *contracts.LoginRequest) (*contracts.LoginResponse, error)
-	// Logout(ctx context.Context, tokenString string) error
-	// RefreshToken(ctx context.Context, tokenString string) (*model.Token, error)
+	Logout(ctx context.Context, req *contracts.LogoutRequest) error
+	RefreshToken(ctx context.Context, req *contracts.RefreshTokenRequest) (*contracts.RefreshTokenResponse, error)
 }
 
 type authService struct {
@@ -99,48 +101,56 @@ func (s *authService) Login(ctx context.Context, req *contracts.LoginRequest) (*
 	}, nil
 }
 
-//
-// func (s *authService) Logout(ctx context.Context, tokenString string) error {
-// 	// Add token to blacklist
-// 	claims, err := s.jwt.ValidateToken(tokenString)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	expiresIn := timeutil.Until(claims.ExpiresAt.Time)
-// 	return s.cachedRepo.SetBlacklist(ctx, tokenString, expiresIn)
-// }
-//
-// func (s *authService) RefreshToken(ctx context.Context, tokenString string) (*model.Token, error) {
-// 	// Validate the refresh token
-// 	claims, err := s.jwt.ValidateToken(tokenString)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	// Check if token is blacklisted
-// 	blacklisted, err := s.cachedRepo.IsBlacklisted(ctx, tokenString)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if blacklisted {
-// 		return nil, errors.New("token has been revoked")
-// 	}
-//
-// 	// Generate new access token
-// 	newTokenString, err := s.jwt.GenerateToken(claims.UserID, claims.Email)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	// Get new token expiration timeutil
-// 	newToken, _ := s.jwt.ValidateToken(newTokenString)
-//
-// 	// Add old token to blacklist
-// 	s.cachedRepo.SetBlacklist(ctx, tokenString)
-//
-// 	return &model.Token{
-// 		AccessToken: newTokenString,
-// 		ExpiresAt:   newToken.ExpiresAt.Unix(),
-// 	}, nil
-// }
+func (s *authService) Logout(ctx context.Context, tokenString string) error {
+	claims, err := s.jwt.ValidateToken(tokenString)
+	if err != nil {
+		return err
+	}
+
+	expiresIn := time.Until(claims.ExpiresAt.Time)
+	return s.cachedRepo.SetBlacklist(ctx, tokenString, expiresIn)
+}
+
+func (s *authService) RefreshToken(ctx context.Context, req *contracts.RefreshTokenRequest) (*contracts.RefreshTokenResponse, error) {
+	claims, err := s.jwt.ValidateToken(req.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	blacklisted, err := s.cachedRepo.IsBlacklisted(ctx, req.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+	if blacklisted {
+		return nil, errors.New("token has been revoked")
+	}
+
+	accessTokenString, err := s.jwt.GenerateAccessToken(claims.UserID, claims.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, _ := s.jwt.ValidateToken(accessTokenString)
+
+	refreshTokenString, err := s.jwt.GenerateRefreshToken(claims.UserID, claims.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, _ := s.jwt.ValidateToken(refreshTokenString)
+
+	if err = s.cachedRepo.SetBlacklist(ctx, req.RefreshToken, timeutil.Month); err != nil {
+		return nil, err
+	}
+
+	return &contracts.RefreshTokenResponse{
+		AccessToken: model.Token{
+			Token:     accessTokenString,
+			ExpiresAt: accessToken.ExpiresAt.Unix(),
+		},
+		RefreshToken: model.Token{
+			Token:     refreshTokenString,
+			ExpiresAt: refreshToken.ExpiresAt.Unix(),
+		},
+	}, nil
+}

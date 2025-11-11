@@ -26,3 +26,12 @@ type LoginResponse struct {
 	AccessToken  model.Token `json:"access_token"`
 	RefreshToken model.Token `json:"refresh_token"`
 }
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshTokenResponse struct {
+	AccessToken  model.Token `json:"access_token"`
+	RefreshToken model.Token `json:"refresh_token"`
+}
