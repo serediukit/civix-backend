@@ -1,4 +1,4 @@
-package util
+package jwt
 
 import (
 	"crypto/rand"
@@ -7,31 +7,45 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/serediukit/civix-backend/internal/config"
 )
 
 var (
 	ErrInvalidToken = errors.New("invalid token")
 )
 
-type JWTUtil struct {
-	secretKey []byte
+type JWT struct {
+	secretKey              []byte
+	accessTokenExpiration  time.Duration
+	refreshTokenExpiration time.Duration
 }
 
-func NewJWTUtil(cfg *config.Config) *JWTUtil {
-	return &JWTUtil{
-		secretKey: []byte(cfg.JWT.Secret),
+func NewJWT(config *JWTConfig) *JWT {
+	return &JWT{
+		secretKey:              []byte(config.Secret),
+		accessTokenExpiration:  config.TokenExpiration,
+		refreshTokenExpiration: config.RefreshExpiration,
 	}
 }
 
 type Claims struct {
-	UserID uint   `json:"user_id"`
+	UserID uint64 `json:"user_id"`
 	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-func (j *JWTUtil) GenerateToken(userID uint, email string, expiresIn time.Duration) (string, error) {
-	expirationTime := time.Now().Add(expiresIn)
+func (j *JWT) GenerateAccessToken(userID uint64, email string) (string, error) {
+	expirationTime := time.Now().Add(j.accessTokenExpiration)
+
+	return j.generateToken(userID, email, expirationTime)
+}
+
+func (j *JWT) GenerateRefreshToken(userID uint64, email string) (string, error) {
+	expirationTime := time.Now().Add(j.refreshTokenExpiration)
+
+	return j.generateToken(userID, email, expirationTime)
+}
+
+func (j *JWT) generateToken(userID uint64, email string, expirationTime time.Time) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,
@@ -50,7 +64,7 @@ func (j *JWTUtil) GenerateToken(userID uint, email string, expiresIn time.Durati
 	return tokenString, nil
 }
 
-func (j *JWTUtil) ValidateToken(tokenString string) (*Claims, error) {
+func (j *JWT) ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken

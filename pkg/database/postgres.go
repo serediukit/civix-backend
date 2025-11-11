@@ -1,36 +1,50 @@
 package database
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"strconv"
+	"log"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var DB *gorm.DB
-
-func InitDB() (*gorm.DB, error) {
-	host := os.Getenv("DB_HOST")
-	port, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-	sslmode := os.Getenv("DB_SSLMODE")
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
-		host, user, password, dbname, port, sslmode)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
-	}
-
-	DB = db
-	return db, nil
+type Store struct {
+	db *pgxpool.Pool
 }
 
-func GetDB() *gorm.DB {
-	return DB
+func (s *Store) Close() {
+	s.db.Close()
+
+	log.Println("[PostgreSQL] connection closed")
+}
+
+func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		config.Host,
+		config.Port,
+		config.User,
+		config.Password,
+		config.Name,
+		config.SSLMode,
+	)
+
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		log.Fatalf("[PostgreSQL] Unable to connect: %v\n", err)
+		return nil, err
+	}
+
+	if err = pool.Ping(ctx); err != nil {
+		log.Fatalf("[PostgreSQL] Unable to ping: %v\n", err)
+		return nil, err
+	}
+
+	return &Store{
+		db: pool,
+	}, nil
+}
+
+func (s *Store) GetDB() *pgxpool.Pool {
+	return s.db
 }
