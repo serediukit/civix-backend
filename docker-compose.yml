@@ -26,7 +26,9 @@ services:
       - civix-network
 
   db:
-    image: postgis/postgis:16-3.4-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile_postgis
     restart: always
     environment:
       POSTGRES_USER: postgres
