@@ -1,8 +1,9 @@
 package contracts
 
 import (
-	"github.com/serediukit/civix-backend/internal/model"
 	"time"
+
+	"github.com/serediukit/civix-backend/internal/model"
 )
 
 type RegisterRequest struct {
@@ -12,9 +13,9 @@ type RegisterRequest struct {
 }
 
 type RegisterResponse struct {
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
+	Email   string    `json:"email"`
+	Name    string    `json:"name"`
+	RegTime time.Time `json:"reg_time"`
 }
 
 type LoginRequest struct {

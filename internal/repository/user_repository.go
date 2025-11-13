@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"github.com/serediukit/civix-backend/pkg/util/timeutil"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
@@ -28,23 +27,25 @@ func NewUserRepository(store *database.Store) UserRepository {
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, user *model.User) error {
-	createdAt := timeutil.Now()
-
 	sql, args, err := db.SB().
 		Insert(db.TableUsers).
 		Columns(
 			db.TableUsersColumnEmail,
 			db.TableUsersColumnPasswordHash,
 			db.TableUsersColumnName,
-			db.TableUsersColumnCreatedAt,
-			db.TableUsersColumnUpdatedAt,
+			db.TableUsersColumnSurname,
+			db.TableUsersColumnPhoneNumber,
+			db.TableUsersColumnAvatarUrl,
+			db.TableUsersColumnRegCityID,
 		).
 		Values(
 			user.Email,
 			user.PasswordHash,
 			user.Name,
-			createdAt,
-			createdAt,
+			user.Surname,
+			user.PhoneNumber,
+			user.AvatarUrl,
+			user.RegCityID,
 		).
 		ToSql()
 	if err != nil {
@@ -65,12 +66,16 @@ func (r *userRepository) GetUserByID(ctx context.Context, id uint64) (*model.Use
 			db.TableUsersColumnUserID,
 			db.TableUsersColumnEmail,
 			db.TableUsersColumnName,
-			db.TableUsersColumnCreatedAt,
-			db.TableUsersColumnUpdatedAt,
+			db.TableUsersColumnSurname,
+			db.TableUsersColumnPhoneNumber,
+			db.TableUsersColumnAvatarUrl,
+			db.TableUsersColumnRegCityID,
+			db.TableUsersColumnRegTime,
+			db.TableUsersColumnUpdTime,
 		).
 		From(db.TableUsers).
 		Where(db.TableUsersColumnUserID+" = ?", id).
-		Where(db.TableUsersColumnDeletedAt + " IS NULL").
+		Where(db.TableUsersColumnDelTime + " IS NULL").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Get user by id [%d]", id)
@@ -84,8 +89,13 @@ func (r *userRepository) GetUserByID(ctx context.Context, id uint64) (*model.Use
 			&user.UserID,
 			&user.Email,
 			&user.Name,
-			&user.CreatedAt,
-			&user.UpdatedAt)
+			&user.Surname,
+			&user.PhoneNumber,
+			&user.AvatarUrl,
+			&user.RegCityID,
+			&user.RegTime,
+			&user.UpdTime,
+		)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			err = db.ErrNotFound
@@ -104,12 +114,16 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 			db.TableUsersColumnEmail,
 			db.TableUsersColumnPasswordHash,
 			db.TableUsersColumnName,
-			db.TableUsersColumnCreatedAt,
-			db.TableUsersColumnUpdatedAt,
+			db.TableUsersColumnSurname,
+			db.TableUsersColumnPhoneNumber,
+			db.TableUsersColumnAvatarUrl,
+			db.TableUsersColumnRegCityID,
+			db.TableUsersColumnRegTime,
+			db.TableUsersColumnUpdTime,
 		).
 		From(db.TableUsers).
 		Where(db.TableUsersColumnEmail+" = ?", email).
-		Where(db.TableUsersColumnDeletedAt + " IS NULL").
+		Where(db.TableUsersColumnDelTime + " IS NULL").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Get user by email [%s]", email)
@@ -124,8 +138,12 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 			&user.Email,
 			&user.PasswordHash,
 			&user.Name,
-			&user.CreatedAt,
-			&user.UpdatedAt)
+			&user.Surname,
+			&user.PhoneNumber,
+			&user.AvatarUrl,
+			&user.RegCityID,
+			&user.RegTime,
+			&user.UpdTime)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			err = db.ErrNotFound
