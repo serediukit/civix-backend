@@ -7,9 +7,12 @@ import (
 )
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required,min=6"`
+	Name        string `json:"name" binding:"required"`
+	Surname     string `json:"surname"`
+	PhoneNumber string `json:"phone_number" binding:"min=10,max=13"`
+	Location    string `json:"location"`
 }
 
 type RegisterResponse struct {
