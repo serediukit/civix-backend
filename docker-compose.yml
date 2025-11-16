@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8443:8443"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -23,6 +23,9 @@ services:
       - db
       - redis
     restart: unless-stopped
+    volumes:
+      - ./cert.pem:/app/cert.pem
+      - ./key.pem:/app/key.pem
     networks:
       - civix-network
 

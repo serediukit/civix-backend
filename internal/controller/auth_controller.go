@@ -5,7 +5,6 @@ import (
 	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/services/auth"
 	"github.com/serediukit/civix-backend/pkg/util/response"
-	"strings"
 )
 
 type AuthController struct {
@@ -66,14 +65,13 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 }
 
 func (c *AuthController) RefreshToken(ctx *gin.Context) {
-	authHeader := ctx.GetHeader("Authorization")
-	if authHeader == "" {
-		response.Unauthorized(ctx, "Authorization header is required", nil)
+	var req contracts.RefreshTokenRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(ctx, "Invalid request body", err)
 		return
 	}
 
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	resp, err := c.authService.RefreshToken(ctx.Request.Context(), &contracts.RefreshTokenRequest{RefreshToken: tokenString})
+	resp, err := c.authService.RefreshToken(ctx.Request.Context(), &req)
 	if err != nil {
 		response.Unauthorized(ctx, "Failed to refresh token", err)
 		return

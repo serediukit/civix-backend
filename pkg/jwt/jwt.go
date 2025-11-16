@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -67,6 +68,8 @@ func (j *JWT) generateToken(userID uint64, email string, expirationTime time.Tim
 func (j *JWT) ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			log.Printf("Invalid token detected: incorrect signing method: alg[%s]: %s", token.Header["alg"], tokenString)
+
 			return nil, ErrInvalidToken
 		}
 		return j.secretKey, nil
@@ -79,6 +82,8 @@ func (j *JWT) ValidateToken(tokenString string) (*Claims, error) {
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
+
+	log.Printf("Invalid token detected: %s", tokenString)
 
 	return nil, ErrInvalidToken
 }
