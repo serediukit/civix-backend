@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   app:
+    container_name: civix_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,13 +27,17 @@ services:
       - civix-network
 
   db:
-    image: postgres:15-alpine
+    container_name: civix_postgres_db
+    build:
+      context: .
+      dockerfile: Dockerfile_postgis
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: civix_db
     volumes:
-      - .migrations:/docker-entrypoint-initdb.d
+      - ./migrations:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
@@ -47,6 +50,7 @@ services:
       retries: 5
 
   redis:
+    container_name: civix_redis
     image: redis:7-alpine
     ports:
       - "6379:6379"

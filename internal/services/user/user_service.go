@@ -31,7 +31,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 // 		ID:        user.UserID,
 // 		Email:     user.Email,
 // 		Name:      user.Name,
-// 		CreatedAt: user.CreatedAt,
+// 		RegTime: user.RegTime,
 // 	}, nil
 // }
 //
@@ -63,7 +63,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 // 		ID:        user.UserID,
 // 		Email:     user.Email,
 // 		Name:      user.Name,
-// 		CreatedAt: user.CreatedAt,
+// 		RegTime: user.RegTime,
 // 	}, nil
 // }
 //

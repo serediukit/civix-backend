@@ -3,13 +3,14 @@ package auth
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
 	"github.com/serediukit/civix-backend/pkg/hash"
 	"github.com/serediukit/civix-backend/pkg/jwt"
 	"github.com/serediukit/civix-backend/pkg/util/timeutil"
-	"time"
 )
 
 type AuthService interface {
@@ -59,9 +60,9 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 	}
 
 	return &contracts.RegisterResponse{
-		Email:     user.Email,
-		Name:      user.Name,
-		CreatedAt: user.CreatedAt,
+		Email:   user.Email,
+		Name:    user.Name,
+		RegTime: user.RegTime,
 	}, nil
 }
 

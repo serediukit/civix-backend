@@ -1,20 +1,24 @@
 package contracts
 
 import (
-	"github.com/serediukit/civix-backend/internal/model"
 	"time"
+
+	"github.com/serediukit/civix-backend/internal/model"
 )
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required,min=6"`
+	Name        string `json:"name" binding:"required"`
+	Surname     string `json:"surname"`
+	PhoneNumber string `json:"phone_number" binding:"min=10,max=13"`
+	Location    string `json:"location"`
 }
 
 type RegisterResponse struct {
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
+	Email   string    `json:"email"`
+	Name    string    `json:"name"`
+	RegTime time.Time `json:"reg_time"`
 }
 
 type LoginRequest struct {
