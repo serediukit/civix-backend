@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
@@ -55,13 +56,14 @@ func (s *Server) Run() error {
 
 	userRepo := repository.NewUserRepository(store)
 	// reportRepo := repository.NewReportRepository(db)
+	cityRepo := repository.NewCityRepository(store)
 	cacheRepo := repository.NewCacheRepository(redisClient)
 
 	// Initialize utilities
 	jwt := jwt.NewJWT(s.config.GetJWTConfig())
 
 	// Initialize services
-	authService := auth.NewAuthService(userRepo, cacheRepo, jwt)
+	authService := auth.NewAuthService(userRepo, cityRepo, cacheRepo, jwt)
 	// userService := user.NewUserService(userRepo)
 	// reportService := reports.NewReportService(reportRepo)
 
@@ -79,12 +81,15 @@ func (s *Server) Run() error {
 	srv := &http.Server{
 		Addr:    ":" + s.config.Server.Port,
 		Handler: s.router,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	}
 
 	go func() {
 		log.Printf("Server is running on port %s\n", s.config.Server.Port)
 
-		if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err = srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to run server: %v", err)
 		}
 	}()

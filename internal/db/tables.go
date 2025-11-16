@@ -3,6 +3,8 @@ package db
 const (
 	TableUsers   = "users"
 	TableReports = "reports"
+
+	TableCities = "cities"
 )
 
 const (
@@ -17,4 +19,11 @@ const (
 	TableUsersColumnRegTime      = "reg_time"
 	TableUsersColumnUpdTime      = "upd_time"
 	TableUsersColumnDelTime      = "del_time"
+)
+
+const (
+	TableCitiesColumnCityID   = "city_id"
+	TableCitiesColumnName     = "name"
+	TableCitiesColumnRegion   = "region"
+	TableCitiesColumnLocation = "location"
 )

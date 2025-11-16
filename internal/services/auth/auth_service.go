@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"github.com/serediukit/civix-backend/internal/db"
 	"time"
 
 	"github.com/serediukit/civix-backend/internal/contracts"
@@ -22,17 +23,20 @@ type AuthService interface {
 
 type authService struct {
 	userRepo   repository.UserRepository
+	cityRepo   repository.CityRepository
 	cachedRepo repository.CacheRepository
 	jwt        *jwt.JWT
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
+	cityRepo repository.CityRepository,
 	cachedRepo repository.CacheRepository,
 	jwt *jwt.JWT,
 ) AuthService {
 	return &authService{
 		userRepo:   userRepo,
+		cityRepo:   cityRepo,
 		cachedRepo: cachedRepo,
 		jwt:        jwt,
 	}
@@ -49,10 +53,22 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 		return nil, err
 	}
 
+	city, err := s.cityRepo.GetCityByLocation(ctx, req.Location)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			city = &model.City{CityID: "661cc9c4-9cb2-48c8-9833-2aa21fd37798"} // Kyiv city_id
+		} else {
+			return nil, err
+		}
+	}
+
 	user := &model.User{
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
 		Name:         req.Name,
+		Surname:      req.Surname,
+		PhoneNumber:  req.PhoneNumber,
+		RegCityID:    city.CityID,
 	}
 
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
@@ -62,7 +78,7 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 	return &contracts.RegisterResponse{
 		Email:   user.Email,
 		Name:    user.Name,
-		RegTime: user.RegTime,
+		RegTime: timeutil.Now(),
 	}, nil
 }
 
