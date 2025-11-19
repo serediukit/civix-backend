@@ -11,7 +11,7 @@ type RegisterRequest struct {
 	Password    string         `json:"password" binding:"required,min=6"`
 	Name        string         `json:"name" binding:"required"`
 	Surname     string         `json:"surname"`
-	PhoneNumber string         `json:"phone_number" binding:"min=10,max=13"`
+	PhoneNumber string         `json:"phone_number" binding:"required,min=10,max=13"`
 	Location    model.Location `json:"location"`
 }
 
