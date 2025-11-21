@@ -22,7 +22,7 @@ const (
 
 type Report struct {
 	ReportID        string         `json:"report_id"`
-	UserID          string         `json:"user_id"`
+	UserID          uint64         `json:"user_id"`
 	CreateTime      string         `json:"create_time"`
 	UpdateTime      string         `json:"update_time"`
 	Location        Location       `json:"location"`

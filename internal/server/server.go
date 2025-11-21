@@ -55,7 +55,7 @@ func (s *Server) Run() error {
 	defer redisClient.Close()
 
 	userRepo := repository.NewUserRepository(store)
-	reportRepo := repository.NewReportRepository(db)
+	reportRepo := repository.NewReportRepository(store)
 	cityRepo := repository.NewCityRepository(store)
 	cacheRepo := repository.NewCacheRepository(redisClient)
 
