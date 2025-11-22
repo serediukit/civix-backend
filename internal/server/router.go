@@ -9,9 +9,9 @@ import (
 )
 
 func setupRouter(
-	authController *controller.AuthController,
+	authController controller.AuthController,
 	// userController *controller.UserController,
-	// reportController *controller.ReportController,
+	reportController controller.ReportController,
 	authMiddleware *middleware.AuthMiddleware,
 ) *gin.Engine {
 	r := gin.New()
@@ -50,15 +50,15 @@ func setupRouter(
 		// 	users.DELETE("/me", userController.DeleteAccount)
 		// }
 
-		// // Report routes
-		// reports := v1.Group("/reports")
-		// reports.Use(authMiddleware.AuthRequired())
-		// {
-		// 	reports.GET("/", reportController.GetReports)
-		// 	reports.POST("/", reportController.CreateReport)
-		// 	reports.PUT("/:id", reportController.UpdateReport)
-		// 	reports.DELETE("/:id", reportController.DeleteReport)
-		// }
+		// Report routes
+		reports := v1.Group("/reports")
+		reports.Use(authMiddleware.AuthRequired())
+		{
+			reports.GET("/", reportController.GetReports)
+			reports.POST("/", reportController.CreateReport)
+			// reports.PUT("/:id", reportController.UpdateReport)
+			// reports.DELETE("/:id", reportController.DeleteReport)
+		}
 	}
 
 	return r

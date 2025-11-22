@@ -56,7 +56,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 }
 
 func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location model.Location, cityID string, statuses []model.ReportStatus, pageSize uint64) ([]*model.Report, error) {
-	sql, args, err := db.SB().
+	sb := db.SB().
 		Select(
 			db.TableReportsColumnReportID,
 			db.TableReportsColumnUserID,
@@ -69,10 +69,13 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 			db.TableReportsCurrentStatusID,
 		).
 		From(db.TableReports).
-		Where(squirrel.Eq{
-			db.TableReportsCityID:          cityID,
-			db.TableReportsCurrentStatusID: statuses,
-		}).
+		Where(squirrel.Eq{db.TableReportsCityID: cityID})
+
+	if len(statuses) > 0 {
+		sb = sb.Where(squirrel.Eq{db.TableReportsCurrentStatusID: statuses})
+	}
+
+	sql, args, err := sb.
 		Suffix("ORDER BY "+db.TableReportsLocation+" <-> ST_SetSRID(ST_Point(?, ?), 4326) LIMIT ?", location.Lng, location.Lat, pageSize).
 		ToSql()
 

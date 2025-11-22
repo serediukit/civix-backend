@@ -1,11 +1,15 @@
 package model
 
+import "time"
+
 type ReportStatus int8
 
 const (
 	ReportStatusNew ReportStatus = iota
 	ReportStatusInProgress
 	ReportStatusCompleted
+	ReportStatusRejected
+	ReportStatusCanceled
 )
 
 type ReportCategory int8
@@ -23,8 +27,8 @@ const (
 type Report struct {
 	ReportID        string         `json:"report_id"`
 	UserID          uint64         `json:"user_id"`
-	CreateTime      string         `json:"create_time"`
-	UpdateTime      string         `json:"update_time"`
+	CreateTime      time.Time      `json:"create_time"`
+	UpdateTime      time.Time      `json:"update_time"`
 	Location        Location       `json:"location"`
 	CityID          string         `json:"city_id"`
 	Description     string         `json:"description"`

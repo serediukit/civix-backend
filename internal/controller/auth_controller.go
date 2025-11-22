@@ -7,33 +7,40 @@ import (
 	"github.com/serediukit/civix-backend/pkg/util/response"
 )
 
-type AuthController struct {
+type AuthController interface {
+	Register(router *gin.Context)
+	Login(router *gin.Context)
+	Logout(router *gin.Context)
+	RefreshToken(router *gin.Context)
+}
+
+type authController struct {
 	authService services.AuthService
 }
 
-func NewAuthController(authService services.AuthService) *AuthController {
-	return &AuthController{
+func NewAuthController(authService services.AuthService) AuthController {
+	return &authController{
 		authService: authService,
 	}
 }
 
-func (c *AuthController) Register(ctx *gin.Context) {
+func (c *authController) Register(ctx *gin.Context) {
 	var req contracts.RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "Invalid request body", err)
 		return
 	}
 
-	user, err := c.authService.Register(ctx.Request.Context(), &req)
+	resp, err := c.authService.Register(ctx.Request.Context(), &req)
 	if err != nil {
 		response.BadRequest(ctx, "Failed to create user", err)
 		return
 	}
 
-	response.Created(ctx, user)
+	response.Created(ctx, resp)
 }
 
-func (c *AuthController) Login(ctx *gin.Context) {
+func (c *authController) Login(ctx *gin.Context) {
 	var req contracts.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "Invalid request body", err)
@@ -49,7 +56,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	response.Success(ctx, resp)
 }
 
-func (c *AuthController) Logout(ctx *gin.Context) {
+func (c *authController) Logout(ctx *gin.Context) {
 	var req contracts.LogoutRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "Invalid request body", err)
@@ -64,7 +71,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	response.Success(ctx, gin.H{"message": "Successfully logged out"})
 }
 
-func (c *AuthController) RefreshToken(ctx *gin.Context) {
+func (c *authController) RefreshToken(ctx *gin.Context) {
 	var req contracts.RefreshTokenRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "Invalid request body", err)

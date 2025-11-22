@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/serediukit/civix-backend/internal/db"
-
 	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
@@ -56,11 +54,7 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 
 	city, err := s.cityRepo.GetCityByLocation(ctx, req.Location)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			city = &model.City{CityID: repository.KyivCity}
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	user := &model.User{
@@ -72,7 +66,7 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 		RegCityID:    city.CityID,
 	}
 
-	if err := s.userRepo.CreateUser(ctx, user); err != nil {
+	if err = s.userRepo.CreateUser(ctx, user); err != nil {
 		return nil, err
 	}
 
