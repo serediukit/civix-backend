@@ -41,7 +41,7 @@ func (c *reportController) CreateReport(ctx *gin.Context) {
 func (c *reportController) GetReports(ctx *gin.Context) {
 	var req contracts.GetReportsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		response.BadRequest(ctx, "Invalid request body", err)
+		response.BadRequest(ctx, "Invalid query parameters", err)
 		return
 	}
 

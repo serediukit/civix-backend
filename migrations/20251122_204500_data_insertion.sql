@@ -23,6 +23,3 @@ VALUES
 
 (1, ST_SetSRID(ST_Point(26.9957, 49.4223), 4326), 'bf318435-4223-43ad-9c1a-b52bbb0deeea',
  'Fallen tree blocking a small road', 4, 1);
-
-select *
-from reports

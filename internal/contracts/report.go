@@ -13,9 +13,10 @@ type CreateReportResponse struct {
 }
 
 type GetReportsRequest struct {
-	Location model.Location       `json:"location" binding:"required"`
-	Statuses []model.ReportStatus `json:"statuses"`
-	PageSize uint64               `json:"page_size" binding:"max=10"`
+	Lat      float64              `form:"lat" binding:"required"`
+	Lon      float64              `form:"lon" binding:"required"`
+	Statuses []model.ReportStatus `form:"statuses"`
+	PageSize uint64               `form:"page_size" binding:"max=100"`
 }
 
 type GetReportsResponse struct {

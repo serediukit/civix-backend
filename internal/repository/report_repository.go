@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pkg/errors"
 	"github.com/serediukit/civix-backend/internal/db"
 	"github.com/serediukit/civix-backend/internal/model"
@@ -37,7 +37,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 		).
 		Values(
 			report.UserID,
-			report.Location,
+			squirrel.Expr("ST_SetSRID(ST_Point(?, ?), 4326)", report.Location.Lng, report.Location.Lat),
 			report.CityID,
 			report.Description,
 			report.CategoryID,
@@ -62,7 +62,8 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 			db.TableReportsColumnUserID,
 			db.TableReportsCreateTime,
 			db.TableReportsUpdateTime,
-			db.TableReportsLocation,
+			"ST_X("+db.TableReportsLocation+") as lon",
+			"ST_Y("+db.TableReportsLocation+") as lat",
 			db.TableReportsCityID,
 			db.TableReportsDescription,
 			db.TableReportsCategoryID,
@@ -79,18 +80,18 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 		Suffix("ORDER BY "+db.TableReportsLocation+" <-> ST_SetSRID(ST_Point(?, ?), 4326) LIMIT ?", location.Lng, location.Lat, pageSize).
 		ToSql()
 
+	log.Printf("| GetReportsByStatuses |\nSQL: %s\nARGS: %+v\n", sql, args)
+
 	rows, err := r.store.GetDB().Query(ctx, sql, args...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			err = db.ErrNotFound
 		}
 
-		return nil, errors.Wrapf(err, "Get reports by statuses [%+v] for city_id [%s] and location [%+v]", statuses, cityID, location)
+		return nil, errors.Wrapf(err, "Get reports by statuses %+v] for city_id [%s] and location [%+v]", statuses, cityID, location)
 	}
 
 	reports := make([]*model.Report, 0)
-
-	var point pgtype.Point
 
 	for rows.Next() {
 		report := &model.Report{}
@@ -100,18 +101,14 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 			&report.UserID,
 			&report.CreateTime,
 			&report.UpdateTime,
-			&point,
+			&report.Location.Lng,
+			&report.Location.Lat,
 			&report.CityID,
 			&report.Description,
 			&report.CategoryID,
 			&report.CurrentStatusID,
 		); err != nil {
 			return nil, errors.Wrapf(err, "Get reports by statuses [%+v] for city_id [%s] and location [%+v]", statuses, cityID, location)
-		}
-
-		report.Location = model.Location{
-			Lng: point.P.X,
-			Lat: point.P.Y,
 		}
 
 		reports = append(reports, report)

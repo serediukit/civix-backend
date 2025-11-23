@@ -56,7 +56,12 @@ func (s *reportService) CreateReport(ctx context.Context, req *contracts.CreateR
 }
 
 func (s *reportService) GetReports(ctx context.Context, req *contracts.GetReportsRequest) (*contracts.GetReportsResponse, error) {
-	city, err := s.cityRepo.GetCityByLocation(ctx, req.Location)
+	location := model.Location{
+		Lat: req.Lat,
+		Lng: req.Lon,
+	}
+
+	city, err := s.cityRepo.GetCityByLocation(ctx, location)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +70,7 @@ func (s *reportService) GetReports(ctx context.Context, req *contracts.GetReport
 		req.Statuses = []model.ReportStatus{}
 	}
 
-	reports, err := s.reportRepo.GetReportsByStatuses(ctx, req.Location, city.CityID, req.Statuses, req.PageSize)
+	reports, err := s.reportRepo.GetReportsByStatuses(ctx, location, city.CityID, req.Statuses, req.PageSize)
 	if err != nil {
 		return nil, err
 	}

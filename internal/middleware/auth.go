@@ -3,8 +3,9 @@ package middleware
 import (
 	"context"
 	"errors"
-	"github.com/serediukit/civix-backend/pkg/util/response"
 	"strings"
+
+	"github.com/serediukit/civix-backend/pkg/util/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/repository"
