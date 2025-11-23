@@ -6,7 +6,6 @@ import (
 	"github.com/serediukit/civix-backend/internal/contracts"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
-	"github.com/serediukit/civix-backend/pkg/util/timeutil"
 )
 
 type ReportService interface {
@@ -45,10 +44,6 @@ func (s *reportService) CreateReport(ctx context.Context, req *contracts.CreateR
 	if err = s.reportRepo.CreateReport(ctx, report); err != nil {
 		return nil, err
 	}
-
-	report.CreateTime = timeutil.Now()
-	report.UpdateTime = timeutil.Now()
-	report.CurrentStatusID = model.ReportStatusNew
 
 	return &contracts.CreateReportResponse{
 		Report: report,
