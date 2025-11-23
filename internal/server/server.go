@@ -15,7 +15,7 @@ import (
 	"github.com/serediukit/civix-backend/internal/controller"
 	"github.com/serediukit/civix-backend/internal/middleware"
 	"github.com/serediukit/civix-backend/internal/repository"
-	"github.com/serediukit/civix-backend/internal/services/auth"
+	"github.com/serediukit/civix-backend/internal/services"
 	"github.com/serediukit/civix-backend/pkg/database"
 	"github.com/serediukit/civix-backend/pkg/jwt"
 	"github.com/serediukit/civix-backend/pkg/redis"
@@ -55,7 +55,7 @@ func (s *Server) Run() error {
 	defer redisClient.Close()
 
 	userRepo := repository.NewUserRepository(store)
-	// reportRepo := repository.NewReportRepository(db)
+	reportRepo := repository.NewReportRepository(store)
 	cityRepo := repository.NewCityRepository(store)
 	cacheRepo := repository.NewCacheRepository(redisClient)
 
@@ -63,20 +63,20 @@ func (s *Server) Run() error {
 	jwt := jwt.NewJWT(s.config.GetJWTConfig())
 
 	// Initialize services
-	authService := auth.NewAuthService(userRepo, cityRepo, cacheRepo, jwt)
+	authService := services.NewAuthService(userRepo, cityRepo, cacheRepo, jwt)
 	// userService := user.NewUserService(userRepo)
-	// reportService := reports.NewReportService(reportRepo)
+	reportService := services.NewReportService(reportRepo, cityRepo)
 
 	// Initialize controllers
 	authController := controller.NewAuthController(authService)
 	// userController := controller.NewUserController(userService)
-	// reportController := controller.NewReportController(reportService)
+	reportController := controller.NewReportController(reportService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwt, cacheRepo)
 
 	// Create router
-	s.router = setupRouter(authController, authMiddleware)
+	s.router = setupRouter(authController, reportController, authMiddleware)
 
 	srv := &http.Server{
 		Addr:    ":" + s.config.Server.Port,

@@ -1,4 +1,4 @@
-package user
+package services
 
 import (
 	"github.com/serediukit/civix-backend/internal/repository"

@@ -2,14 +2,13 @@ package repository
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 	"github.com/serediukit/civix-backend/internal/db"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/pkg/database"
 )
-
-const ErrUnknownCity = "unknown city"
 
 type CityRepository interface {
 	GetCityByLocation(ctx context.Context, location model.Location) (*model.City, error)

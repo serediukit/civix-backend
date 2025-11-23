@@ -1,9 +1,8 @@
-package auth
+package services
 
 import (
 	"context"
 	"errors"
-	"github.com/serediukit/civix-backend/internal/db"
 	"time"
 
 	"github.com/serediukit/civix-backend/internal/contracts"
@@ -55,11 +54,7 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 
 	city, err := s.cityRepo.GetCityByLocation(ctx, req.Location)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			city = &model.City{CityID: "661cc9c4-9cb2-48c8-9833-2aa21fd37798"} // Kyiv city_id
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	user := &model.User{
@@ -71,7 +66,7 @@ func (s *authService) Register(ctx context.Context, req *contracts.RegisterReque
 		RegCityID:    city.CityID,
 	}
 
-	if err := s.userRepo.CreateUser(ctx, user); err != nil {
+	if err = s.userRepo.CreateUser(ctx, user); err != nil {
 		return nil, err
 	}
 

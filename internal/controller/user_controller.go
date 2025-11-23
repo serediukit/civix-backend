@@ -10,10 +10,10 @@ package controller
 // )
 //
 // type UserController struct {
-// 	userService user.UserService
+// 	userService *user.UserService
 // }
 //
-// func NewUserController(userService user.UserService) *UserController {
+// func NewUserController(userService *user.UserService) *UserController {
 // 	return &UserController{
 // 		userService: userService,
 // 	}
