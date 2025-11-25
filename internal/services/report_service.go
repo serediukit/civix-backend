@@ -52,8 +52,8 @@ func (s *reportService) CreateReport(ctx context.Context, req *contracts.CreateR
 
 func (s *reportService) GetReports(ctx context.Context, req *contracts.GetReportsRequest) (*contracts.GetReportsResponse, error) {
 	location := model.Location{
-		Lat: req.Lat,
-		Lng: req.Lon,
+		Lat: *req.Lat,
+		Lng: *req.Lon,
 	}
 
 	city, err := s.cityRepo.GetCityByLocation(ctx, location)

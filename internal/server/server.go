@@ -35,6 +35,36 @@ func NewServer(config *config.Config) *Server {
 func (s *Server) Run() error {
 	s.logger = logrus.New()
 
+	// Configure logger
+	var formatter logrus.Formatter
+	if s.config.Server.GinMode == gin.ReleaseMode {
+		// Production: compact JSON
+		formatter = &logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "timestamp",
+				logrus.FieldKeyLevel: "level",
+				logrus.FieldKeyMsg:   "message",
+			},
+		}
+		s.logger.SetLevel(logrus.InfoLevel)
+	} else {
+		// Development: pretty-printed JSON with indentation
+		formatter = &logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
+			PrettyPrint:     true,
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "timestamp",
+				logrus.FieldKeyLevel: "level",
+				logrus.FieldKeyMsg:   "message",
+			},
+		}
+		s.logger.SetLevel(logrus.DebugLevel)
+	}
+	s.logger.SetFormatter(formatter)
+
+	s.logger.SetOutput(os.Stdout)
+
 	// Set Gin mode
 	gin.SetMode(s.config.Server.GinMode)
 
@@ -60,10 +90,10 @@ func (s *Server) Run() error {
 	cacheRepo := repository.NewCacheRepository(redisClient)
 
 	// Initialize utilities
-	jwt := jwt.NewJWT(s.config.GetJWTConfig())
+	jwtTokenizer := jwt.NewJWT(s.config.GetJWTConfig())
 
 	// Initialize services
-	authService := services.NewAuthService(userRepo, cityRepo, cacheRepo, jwt)
+	authService := services.NewAuthService(userRepo, cityRepo, cacheRepo, jwtTokenizer)
 	// userService := user.NewUserService(userRepo)
 	reportService := services.NewReportService(reportRepo, cityRepo)
 
@@ -73,10 +103,10 @@ func (s *Server) Run() error {
 	reportController := controller.NewReportController(reportService)
 
 	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(jwt, cacheRepo)
+	authMiddleware := middleware.NewAuthMiddleware(jwtTokenizer, cacheRepo)
 
 	// Create router
-	s.router = setupRouter(authController, reportController, authMiddleware)
+	s.router = setupRouter(authController, reportController, authMiddleware, s.logger)
 
 	srv := &http.Server{
 		Addr:    ":" + s.config.Server.Port,

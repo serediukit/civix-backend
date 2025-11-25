@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -106,8 +105,6 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 	sql, args, err := sb.
 		Suffix("ORDER BY "+db.TableReportsLocation+" <-> ST_SetSRID(ST_Point(?, ?), 4326) LIMIT ?", location.Lng, location.Lat, pageSize).
 		ToSql()
-
-	log.Printf("| GetReportsByStatuses |\nSQL: %s\nARGS: %+v\n", sql, args)
 
 	rows, err := r.store.GetDB().Query(ctx, sql, args...)
 	if err != nil {
