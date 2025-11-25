@@ -6,6 +6,7 @@ type CreateReportRequest struct {
 	Location    model.Location       `json:"location" binding:"required"`
 	Description string               `json:"description"`
 	CategoryID  model.ReportCategory `json:"category_id"`
+	PhotoURL    *string              `json:"photo_url"`
 }
 
 type CreateReportResponse struct {

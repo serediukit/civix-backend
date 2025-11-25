@@ -39,6 +39,7 @@ func (s *reportService) CreateReport(ctx context.Context, req *contracts.CreateR
 		CityID:      city.CityID,
 		Description: req.Description,
 		CategoryID:  req.CategoryID,
+		PhotoURL:    req.PhotoURL,
 	}
 
 	if err = s.reportRepo.CreateReport(ctx, report); err != nil {

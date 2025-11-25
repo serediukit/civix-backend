@@ -38,6 +38,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 			db.TableReportsDescription,
 			db.TableReportsCategoryID,
 			db.TableReportsCurrentStatusID,
+			db.TableReportsPhotoURL,
 		}, ",")
 
 	sql, args, err := db.SB().
@@ -48,6 +49,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 			db.TableReportsCityID,
 			db.TableReportsDescription,
 			db.TableReportsCategoryID,
+			db.TableReportsPhotoURL,
 		).
 		Values(
 			report.UserID,
@@ -55,6 +57,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 			report.CityID,
 			report.Description,
 			report.CategoryID,
+			report.PhotoURL,
 		).
 		Suffix("RETURNING " + columns).
 		ToSql()
@@ -73,6 +76,7 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 		&report.Description,
 		&report.CategoryID,
 		&report.CurrentStatusID,
+		&report.PhotoURL,
 	)
 	if err != nil {
 		return errors.Wrapf(err, "Create report [%+v] QueryRow: %s, %+v", report, sql, args)
@@ -94,6 +98,7 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 			db.TableReportsDescription,
 			db.TableReportsCategoryID,
 			db.TableReportsCurrentStatusID,
+			db.TableReportsPhotoURL,
 		).
 		From(db.TableReports).
 		Where(squirrel.Eq{db.TableReportsCityID: cityID})
@@ -131,6 +136,7 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 			&report.Description,
 			&report.CategoryID,
 			&report.CurrentStatusID,
+			&report.PhotoURL,
 		); err != nil {
 			return nil, errors.Wrapf(err, "Get reports by statuses [%+v] for city_id [%s] and location [%+v]", statuses, cityID, location)
 		}
