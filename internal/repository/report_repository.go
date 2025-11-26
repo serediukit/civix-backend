@@ -30,26 +30,26 @@ func (r *reportRepository) CreateReport(ctx context.Context, report *model.Repor
 		[]string{
 			db.TableReportsColumnReportID,
 			db.TableReportsColumnUserID,
-			db.TableReportsCreateTime,
-			db.TableReportsUpdateTime,
-			"ST_X(" + db.TableReportsLocation + ") as lon",
-			"ST_Y(" + db.TableReportsLocation + ") as lat",
-			db.TableReportsCityID,
-			db.TableReportsDescription,
-			db.TableReportsCategoryID,
-			db.TableReportsCurrentStatusID,
-			db.TableReportsPhotoURL,
+			db.TableReportsColumnCreateTime,
+			db.TableReportsColumnUpdateTime,
+			"ST_X(" + db.TableReportsColumnLocation + ") as lon",
+			"ST_Y(" + db.TableReportsColumnLocation + ") as lat",
+			db.TableReportsColumnCityID,
+			db.TableReportsColumnDescription,
+			db.TableReportsColumnCategoryID,
+			db.TableReportsColumnCurrentStatusID,
+			db.TableReportsColumnPhotoURL,
 		}, ",")
 
 	sql, args, err := db.SB().
 		Insert(db.TableReports).
 		Columns(
 			db.TableReportsColumnUserID,
-			db.TableReportsLocation,
-			db.TableReportsCityID,
-			db.TableReportsDescription,
-			db.TableReportsCategoryID,
-			db.TableReportsPhotoURL,
+			db.TableReportsColumnLocation,
+			db.TableReportsColumnCityID,
+			db.TableReportsColumnDescription,
+			db.TableReportsColumnCategoryID,
+			db.TableReportsColumnPhotoURL,
 		).
 		Values(
 			report.UserID,
@@ -90,25 +90,25 @@ func (r *reportRepository) GetReportsByStatuses(ctx context.Context, location mo
 		Select(
 			db.TableReportsColumnReportID,
 			db.TableReportsColumnUserID,
-			db.TableReportsCreateTime,
-			db.TableReportsUpdateTime,
-			"ST_X("+db.TableReportsLocation+") as lon",
-			"ST_Y("+db.TableReportsLocation+") as lat",
-			db.TableReportsCityID,
-			db.TableReportsDescription,
-			db.TableReportsCategoryID,
-			db.TableReportsCurrentStatusID,
-			db.TableReportsPhotoURL,
+			db.TableReportsColumnCreateTime,
+			db.TableReportsColumnUpdateTime,
+			"ST_X("+db.TableReportsColumnLocation+") as lon",
+			"ST_Y("+db.TableReportsColumnLocation+") as lat",
+			db.TableReportsColumnCityID,
+			db.TableReportsColumnDescription,
+			db.TableReportsColumnCategoryID,
+			db.TableReportsColumnCurrentStatusID,
+			db.TableReportsColumnPhotoURL,
 		).
 		From(db.TableReports).
-		Where(squirrel.Eq{db.TableReportsCityID: cityID})
+		Where(squirrel.Eq{db.TableReportsColumnCityID: cityID})
 
 	if len(statuses) > 0 {
-		sb = sb.Where(squirrel.Eq{db.TableReportsCurrentStatusID: statuses})
+		sb = sb.Where(squirrel.Eq{db.TableReportsColumnCurrentStatusID: statuses})
 	}
 
 	sql, args, err := sb.
-		Suffix("ORDER BY "+db.TableReportsLocation+" <-> ST_SetSRID(ST_Point(?, ?), 4326) LIMIT ?", location.Lng, location.Lat, pageSize).
+		Suffix("ORDER BY "+db.TableReportsColumnLocation+" <-> ST_SetSRID(ST_Point(?, ?), 4326) LIMIT ?", location.Lng, location.Lat, pageSize).
 		ToSql()
 
 	rows, err := r.store.GetDB().Query(ctx, sql, args...)

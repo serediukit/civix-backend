@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/serediukit/civix-backend/internal/contracts"
+	"github.com/serediukit/civix-backend/internal/middleware"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
 )
@@ -31,10 +33,13 @@ func (s *reportService) CreateReport(ctx context.Context, req *contracts.CreateR
 		return nil, err
 	}
 
-	userId := ctx.Value("user_id").(uint64)
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("user not found in token: %+v", req)
+	}
 
 	report := &model.Report{
-		UserID:      userId,
+		UserID:      userID,
 		Location:    req.Location,
 		CityID:      city.CityID,
 		Description: req.Description,

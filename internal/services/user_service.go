@@ -1,12 +1,18 @@
 package services
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/serediukit/civix-backend/internal/contracts"
+	"github.com/serediukit/civix-backend/internal/middleware"
+	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/internal/repository"
 )
 
 type UserService interface {
-	// GetProfile(ctx context.Context, userID uint) (*model.UserResponse, error)
-	// UpdateProfile(ctx context.Context, userID uint, req *model.UpdateUserRequest) (*model.UserResponse, error)
+	GetUser(ctx context.Context, req *contracts.GetUserRequest) (*contracts.GetUserResponse, error)
+	UpdateProfile(ctx context.Context, req *contracts.UpdateUserRequest) (*contracts.UpdateUserResponse, error)
 	// ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error
 	// DeleteAccount(ctx context.Context, userID uint) error
 }
@@ -21,52 +27,58 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 	}
 }
 
-// func (s *userService) GetProfile(ctx context.Context, userID uint) (*model.UserResponse, error) {
-// 	user, err := s.userRepo.FindByID(ctx, userID)
-// 	if err != nil {
-// 		return nil, errors.New("user not found")
-// 	}
-//
-// 	return &model.UserResponse{
-// 		ID:        user.UserID,
-// 		Email:     user.Email,
-// 		Name:      user.Name,
-// 		RegTime: user.RegTime,
-// 	}, nil
-// }
-//
-// func (s *userService) UpdateProfile(ctx context.Context, userID uint, req *model.UpdateUserRequest) (*model.UserResponse, error) {
-// 	user, err := s.userRepo.FindByID(ctx, userID)
-// 	if err != nil {
-// 		return nil, errors.New("user not found")
-// 	}
-//
-// 	// Update fields if they are provided
-// 	if req.Name != "" {
-// 		user.Name = req.Name
-// 	}
-//
-// 	if req.Email != "" && req.Email != user.Email {
-// 		// Check if new email is already taken
-// 		existingUser, err := s.userRepo.FindByEmail(ctx, req.Email)
-// 		if err == nil && existingUser != nil && existingUser.UserID != userID {
-// 			return nil, errors.New("email already in use")
-// 		}
-// 		user.Email = req.Email
-// 	}
-//
-// 	if err := s.userRepo.Update(ctx, user); err != nil {
-// 		return nil, errors.New("failed to update user")
-// 	}
-//
-// 	return &model.UserResponse{
-// 		ID:        user.UserID,
-// 		Email:     user.Email,
-// 		Name:      user.Name,
-// 		RegTime: user.RegTime,
-// 	}, nil
-// }
-//
+func (s *userService) GetUser(ctx context.Context, req *contracts.GetUserRequest) (*contracts.GetUserResponse, error) {
+	var (
+		user *model.User
+		err  error
+	)
+
+	if req.UserID != 0 {
+		user, err = s.userRepo.GetUserByID(ctx, req.UserID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if req.Email != "" {
+		user, err = s.userRepo.GetUserByEmail(ctx, req.Email)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if user == nil {
+		err = fmt.Errorf("user not found for request: %+v", req)
+	}
+
+	return &contracts.GetUserResponse{
+		User: user,
+	}, err
+}
+
+func (s *userService) UpdateProfile(ctx context.Context, req *contracts.UpdateUserRequest) (*contracts.UpdateUserResponse, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("user not found in token: %+v", req)
+	}
+
+	user := &model.User{
+		UserID:    userID,
+		Name:      req.Name,
+		Surname:   req.Surname,
+		AvatarUrl: req.AvatarURL,
+	}
+
+	err := s.userRepo.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &contracts.UpdateUserResponse{
+		User: user,
+	}, nil
+}
+
 // func (s *userService) ChangePassword(ctx context.Context, userID uint, currentPassword, newPassword string) error {
 // 	user, err := s.userRepo.FindByID(ctx, userID)
 // 	if err != nil {

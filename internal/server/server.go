@@ -94,19 +94,19 @@ func (s *Server) Run() error {
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cityRepo, cacheRepo, jwtTokenizer)
-	// userService := user.NewUserService(userRepo)
+	userService := services.NewUserService(userRepo)
 	reportService := services.NewReportService(reportRepo, cityRepo)
 
 	// Initialize controllers
 	authController := controller.NewAuthController(authService)
-	// userController := controller.NewUserController(userService)
+	userController := controller.NewUserController(userService)
 	reportController := controller.NewReportController(reportService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtTokenizer, cacheRepo)
 
 	// Create router
-	s.router = setupRouter(authController, reportController, authMiddleware, s.logger)
+	s.router = setupRouter(authController, userController, reportController, authMiddleware, s.logger)
 
 	srv := &http.Server{
 		Addr:    ":" + s.config.Server.Port,
