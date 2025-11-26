@@ -34,4 +34,5 @@ type Report struct {
 	Description     string         `json:"description"`
 	CategoryID      ReportCategory `json:"category_id"`
 	CurrentStatusID ReportStatus   `json:"current_status_id"`
+	PhotoURL        *string        `json:"photo_url"`
 }

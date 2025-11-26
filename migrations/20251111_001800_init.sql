@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS reports
     city_id           UUID REFERENCES cities (city_id),
     description       TEXT,
     category_id       INT                   NOT NULL DEFAULT 0,
-    current_status_id INT                   NOT NULL DEFAULT 0
+    current_status_id INT                   NOT NULL DEFAULT 0,
+    photo_url         text
 );
 
 -- Indexes
@@ -79,22 +80,6 @@ CREATE TABLE IF NOT EXISTS reports_statuses_log
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_statuses_log_report_id ON reports_statuses_log (report_id);
 CREATE INDEX IF NOT EXISTS idx_statuses_log_status_id ON reports_statuses_log (status_id);
-
-
---------------------------------------------------------
--- TABLE: reports_media
---------------------------------------------------------
-CREATE TABLE IF NOT EXISTS reports_media
-(
-    media_id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    report_id     UUID          NOT NULL REFERENCES reports (report_id) ON DELETE CASCADE,
-    media_type_id INT           NOT NULL,
-    url           VARCHAR(1024) NOT NULL,
-    upload_time   TIMESTAMPTZ      DEFAULT NOW()
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_media_report_id ON reports_media (report_id);
 
 
 --------------------------------------------------------

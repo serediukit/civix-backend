@@ -6,6 +6,7 @@ type CreateReportRequest struct {
 	Location    model.Location       `json:"location" binding:"required"`
 	Description string               `json:"description"`
 	CategoryID  model.ReportCategory `json:"category_id"`
+	PhotoURL    *string              `json:"photo_url"`
 }
 
 type CreateReportResponse struct {
@@ -13,8 +14,8 @@ type CreateReportResponse struct {
 }
 
 type GetReportsRequest struct {
-	Lat      float64              `form:"lat" binding:"required"`
-	Lon      float64              `form:"lon" binding:"required"`
+	Lat      *float64             `form:"lat" binding:"required,min=-90,max=90"`
+	Lon      *float64             `form:"lon" binding:"required,min=-180,max=180"`
 	Statuses []model.ReportStatus `form:"statuses"`
 	PageSize uint64               `form:"page_size" binding:"max=100"`
 }

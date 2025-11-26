@@ -30,6 +30,7 @@ const (
 	TableReportsDescription     = "description"
 	TableReportsCategoryID      = "category_id"
 	TableReportsCurrentStatusID = "current_status_id"
+	TableReportsPhotoURL        = "photo_url"
 )
 
 const (

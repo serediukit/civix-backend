@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/controller"
 	"github.com/serediukit/civix-backend/internal/middleware"
+	"github.com/sirupsen/logrus"
 )
 
 func setupRouter(
@@ -13,11 +14,12 @@ func setupRouter(
 	// userController *controller.UserController,
 	reportController controller.ReportController,
 	authMiddleware *middleware.AuthMiddleware,
+	logger *logrus.Logger,
 ) *gin.Engine {
 	r := gin.New()
 
 	// Middleware
-	r.Use(gin.Logger())
+	r.Use(middleware.SimpleRequestLogger(logger)) // Custom detailed request/response logger
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
 
