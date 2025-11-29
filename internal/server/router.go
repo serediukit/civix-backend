@@ -47,6 +47,7 @@ func setupRouter(
 		users.Use(authMiddleware.AuthRequired())
 		{
 			users.GET("/", userController.GetUser)
+			users.GET("/me", userController.GetMyUser)
 			users.PUT("/me", userController.UpdateUser)
 			// users.PUT("/me/password", userController.ChangePassword)
 			// users.DELETE("/me", userController.DeleteAccount)

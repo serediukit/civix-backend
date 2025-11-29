@@ -35,19 +35,9 @@ func (s *userService) GetUser(ctx context.Context, req *contracts.GetUserRequest
 
 	if req.UserID != 0 {
 		user, err = s.userRepo.GetUserByID(ctx, req.UserID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if req.Email != "" {
+	} else if req.Email != "" {
 		user, err = s.userRepo.GetUserByEmail(ctx, req.Email)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if user == nil {
+	} else {
 		err = fmt.Errorf("user not found for request: %+v", req)
 	}
 

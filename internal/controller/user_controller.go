@@ -1,14 +1,17 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/serediukit/civix-backend/internal/contracts"
+	"github.com/serediukit/civix-backend/internal/middleware"
 	"github.com/serediukit/civix-backend/internal/services"
 	"github.com/serediukit/civix-backend/pkg/util/response"
 )
 
 type UserController interface {
 	GetUser(ctx *gin.Context)
+	GetMyUser(ctx *gin.Context)
 	UpdateUser(ctx *gin.Context)
 }
 
@@ -27,6 +30,25 @@ func (c *userController) GetUser(ctx *gin.Context) {
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		response.BadRequest(ctx, "Invalid query parameters", err)
 		return
+	}
+
+	resp, err := c.userService.GetUser(ctx.Request.Context(), &req)
+	if err != nil {
+		response.InternalServerError(ctx, "Failed to get user", err)
+		return
+	}
+
+	response.Success(ctx, resp)
+}
+
+func (c *userController) GetMyUser(ctx *gin.Context) {
+	userID, ok := middleware.GetUserIDFromContext(ctx.Request.Context())
+	if !ok {
+		response.Unauthorized(ctx, "token should contain info about user", fmt.Errorf("user not found in token"))
+		return
+	}
+	req := contracts.GetUserRequest{
+		UserID: userID,
 	}
 
 	resp, err := c.userService.GetUser(ctx.Request.Context(), &req)
