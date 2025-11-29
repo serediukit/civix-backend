@@ -2,19 +2,21 @@ package repository
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 	"github.com/serediukit/civix-backend/internal/db"
 	"github.com/serediukit/civix-backend/internal/model"
 	"github.com/serediukit/civix-backend/pkg/database"
+	"github.com/serediukit/civix-backend/pkg/util/timeutil"
 )
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserByID(ctx context.Context, id uint64) (*model.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
-	// Update(ctx context.Context, user *model.User) error
+	UpdateUser(ctx context.Context, user *model.User) error
 	// Delete(ctx context.Context, id uint) error
 }
 
@@ -153,4 +155,49 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 	}
 
 	return &user, nil
+}
+
+func (r *userRepository) UpdateUser(ctx context.Context, user *model.User) error {
+	columns := strings.Join(
+		[]string{
+			db.TableUsersColumnUserID,
+			db.TableUsersColumnEmail,
+			db.TableUsersColumnName,
+			db.TableUsersColumnSurname,
+			db.TableUsersColumnPhoneNumber,
+			db.TableUsersColumnAvatarUrl,
+			db.TableUsersColumnRegCityID,
+			db.TableUsersColumnRegTime,
+			db.TableUsersColumnUpdTime,
+		}, ",")
+
+	sql, args, err := db.SB().
+		Update(db.TableUsers).
+		Set(db.TableUsersColumnName, user.Name).
+		Set(db.TableUsersColumnSurname, user.Surname).
+		Set(db.TableUsersColumnAvatarUrl, user.AvatarUrl).
+		Set(db.TableUsersColumnUpdTime, timeutil.Now()).
+		Where(db.TableUsersColumnUserID+" = ?", user.UserID).
+		Suffix("RETURNING " + columns).
+		ToSql()
+	if err != nil {
+		return errors.Wrapf(err, "Update user [%+v] ToSQL: %s, %+v", user, sql, args)
+	}
+
+	err = r.store.GetDB().QueryRow(ctx, sql, args...).Scan(
+		&user.UserID,
+		&user.Email,
+		&user.Name,
+		&user.Surname,
+		&user.PhoneNumber,
+		&user.AvatarUrl,
+		&user.RegCityID,
+		&user.RegTime,
+		&user.UpdTime,
+	)
+	if err != nil {
+		return errors.Wrapf(err, "Update user [%+v] QueryRow: %s, %+v", user, sql, args)
+	}
+
+	return nil
 }

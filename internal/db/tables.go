@@ -21,16 +21,16 @@ const (
 )
 
 const (
-	TableReportsColumnReportID  = "report_id"
-	TableReportsColumnUserID    = "user_id"
-	TableReportsCreateTime      = "create_time"
-	TableReportsUpdateTime      = "update_time"
-	TableReportsLocation        = "location"
-	TableReportsCityID          = "city_id"
-	TableReportsDescription     = "description"
-	TableReportsCategoryID      = "category_id"
-	TableReportsCurrentStatusID = "current_status_id"
-	TableReportsPhotoURL        = "photo_url"
+	TableReportsColumnReportID        = "report_id"
+	TableReportsColumnUserID          = "user_id"
+	TableReportsColumnCreateTime      = "create_time"
+	TableReportsColumnUpdateTime      = "update_time"
+	TableReportsColumnLocation        = "location"
+	TableReportsColumnCityID          = "city_id"
+	TableReportsColumnDescription     = "description"
+	TableReportsColumnCategoryID      = "category_id"
+	TableReportsColumnCurrentStatusID = "current_status_id"
+	TableReportsColumnPhotoURL        = "photo_url"
 )
 
 const (

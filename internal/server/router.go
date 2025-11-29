@@ -11,7 +11,7 @@ import (
 
 func setupRouter(
 	authController controller.AuthController,
-	// userController *controller.UserController,
+	userController controller.UserController,
 	reportController controller.ReportController,
 	authMiddleware *middleware.AuthMiddleware,
 	logger *logrus.Logger,
@@ -42,15 +42,16 @@ func setupRouter(
 			auth.POST("/refresh", authController.RefreshToken)
 		}
 
-		// // User routes
-		// users := v1.Group("/users")
-		// users.Use(authMiddleware.AuthRequired())
-		// {
-		// 	users.GET("/me", userController.GetProfile)
-		// 	users.PUT("/me", userController.UpdateProfile)
-		// 	users.PUT("/me/password", userController.ChangePassword)
-		// 	users.DELETE("/me", userController.DeleteAccount)
-		// }
+		// User routes
+		users := v1.Group("/users")
+		users.Use(authMiddleware.AuthRequired())
+		{
+			users.GET("/", userController.GetUser)
+			users.GET("/me", userController.GetMyUser)
+			users.PUT("/me", userController.UpdateUser)
+			// users.PUT("/me/password", userController.ChangePassword)
+			// users.DELETE("/me", userController.DeleteAccount)
+		}
 
 		// Report routes
 		reports := v1.Group("/reports")

@@ -47,7 +47,7 @@ func RequestLogger(logger *logrus.Logger) gin.HandlerFunc {
 			"client_ip":    c.ClientIP(),
 			"user_agent":   c.Request.UserAgent(),
 			"referer":      c.Request.Referer(),
-			"request_id":   c.GetHeader("X-Request-ID"),
+			"request_id":   c.GetHeader("X-Request-UserID"),
 			"content_type": c.ContentType(),
 		}).Info("Incoming request")
 

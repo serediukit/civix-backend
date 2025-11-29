@@ -1,87 +1,81 @@
 package controller
 
-//
-// import (
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/serediukit/civix-backend/internal/middleware"
-// 	"github.com/serediukit/civix-backend/internal/model"
-// 	"github.com/serediukit/civix-backend/internal/services/user"
-// 	"github.com/serediukit/civix-backend/internal/util"
-// )
-//
-// type UserController struct {
-// 	userService *user.UserService
-// }
-//
-// func NewUserController(userService *user.UserService) *UserController {
-// 	return &UserController{
-// 		userService: userService,
-// 	}
-// }
-//
-// // GetProfile returns the current user's profile
-// // @Summary Get user profile
-// // @Description Get the profile of the currently authenticated user
-// // @Tags users
-// // @Security BearerAuth
-// // @Produce json
-// // @Success 200 {object} model.UserResponse
-// // @Failure 401 {object} util.Response
-// // @Failure 404 {object} util.Response
-// // @Failure 500 {object} util.Response
-// // @Router /users/me [get]
-// func (c *UserController) GetProfile(ctx *gin.Context) {
-// 	userID, exists := middleware.GetUserIDFromContext(ctx.Request.Context())
-// 	if !exists {
-// 		util.Unauthorized(ctx, "User not authenticated", nil)
-// 		return
-// 	}
-//
-// 	user, err := c.userService.GetProfile(ctx.Request.Context(), userID)
-// 	if err != nil {
-// 		util.NotFound(ctx, "User not found", err)
-// 		return
-// 	}
-//
-// 	util.Success(ctx, user)
-// }
-//
-// // UpdateProfile updates the current user's profile
-// // @Summary Update user profile
-// // @Description Update the profile of the currently authenticated user
-// // @Tags users
-// // @Security BearerAuth
-// // @Accept json
-// // @Produce json
-// // @Param input body model.UpdateUserRequest true "User update data"
-// // @Success 200 {object} model.UserResponse
-// // @Failure 400 {object} util.Response
-// // @Failure 401 {object} util.Response
-// // @Failure 404 {object} util.Response
-// // @Failure 409 {object} util.Response
-// // @Failure 500 {object} util.Response
-// // @Router /users/me [put]
-// func (c *UserController) UpdateProfile(ctx *gin.Context) {
-// 	userID, exists := middleware.GetUserIDFromContext(ctx.Request.Context())
-// 	if !exists {
-// 		util.Unauthorized(ctx, "User not authenticated", nil)
-// 		return
-// 	}
-//
-// 	var req model.UpdateUserRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		util.BadRequest(ctx, "Invalid request body", err)
-// 		return
-// 	}
-//
-// 	user, err := c.userService.UpdateProfile(ctx.Request.Context(), userID, &req)
-// 	if err != nil {
-// 		util.BadRequest(ctx, "Failed to update profile", err)
-// 		return
-// 	}
-//
-// 	util.Success(ctx, user)
-// }
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/serediukit/civix-backend/internal/contracts"
+	"github.com/serediukit/civix-backend/internal/middleware"
+	"github.com/serediukit/civix-backend/internal/services"
+	"github.com/serediukit/civix-backend/pkg/util/response"
+)
+
+type UserController interface {
+	GetUser(ctx *gin.Context)
+	GetMyUser(ctx *gin.Context)
+	UpdateUser(ctx *gin.Context)
+}
+
+type userController struct {
+	userService services.UserService
+}
+
+func NewUserController(userService services.UserService) UserController {
+	return &userController{
+		userService: userService,
+	}
+}
+
+func (c *userController) GetUser(ctx *gin.Context) {
+	var req contracts.GetUserRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(ctx, "Invalid query parameters", err)
+		return
+	}
+
+	resp, err := c.userService.GetUser(ctx.Request.Context(), &req)
+	if err != nil {
+		response.InternalServerError(ctx, "Failed to get user", err)
+		return
+	}
+
+	response.Success(ctx, resp)
+}
+
+func (c *userController) GetMyUser(ctx *gin.Context) {
+	userID, ok := middleware.GetUserIDFromContext(ctx.Request.Context())
+	if !ok {
+		response.Unauthorized(ctx, "token should contain info about user", fmt.Errorf("user not found in token"))
+		return
+	}
+	req := contracts.GetUserRequest{
+		UserID: userID,
+	}
+
+	resp, err := c.userService.GetUser(ctx.Request.Context(), &req)
+	if err != nil {
+		response.InternalServerError(ctx, "Failed to get user", err)
+		return
+	}
+
+	response.Success(ctx, resp)
+}
+
+func (c *userController) UpdateUser(ctx *gin.Context) {
+	var req contracts.UpdateUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(ctx, "Invalid request body", err)
+		return
+	}
+
+	resp, err := c.userService.UpdateProfile(ctx.Request.Context(), &req)
+	if err != nil {
+		response.BadRequest(ctx, "Failed to update profile", err)
+		return
+	}
+
+	response.Success(ctx, resp)
+}
+
 //
 // // ChangePassword changes the current user's password
 // // @Summary Change password
