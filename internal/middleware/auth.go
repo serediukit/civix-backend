@@ -80,3 +80,7 @@ func GetUserEmailFromContext(ctx context.Context) (string, bool) {
 	email, ok := ctx.Value("user_email").(string)
 	return email, ok
 }
+
+func SetUserIDInContext(ctx context.Context, userID uint64) context.Context {
+	return context.WithValue(ctx, "user_id", userID)
+}

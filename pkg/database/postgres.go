@@ -48,3 +48,20 @@ func NewDB(ctx context.Context, config *DatabaseConfig) (*Store, error) {
 func (s *Store) GetDB() *pgxpool.Pool {
 	return s.db
 }
+
+func NewDBFromDSN(ctx context.Context, dsn string) (*Store, error) {
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		log.Printf("[PostgreSQL] Unable to connect: %v\n", err)
+		return nil, err
+	}
+
+	if err = pool.Ping(ctx); err != nil {
+		log.Printf("[PostgreSQL] Unable to ping: %v\n", err)
+		return nil, err
+	}
+
+	return &Store{
+		db: pool,
+	}, nil
+}

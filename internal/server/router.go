@@ -9,6 +9,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func SetupRouter(
+	authController controller.AuthController,
+	userController controller.UserController,
+	reportController controller.ReportController,
+	authMiddleware *middleware.AuthMiddleware,
+	logger *logrus.Logger,
+) *gin.Engine {
+	return setupRouter(authController, userController, reportController, authMiddleware, logger)
+}
+
 func setupRouter(
 	authController controller.AuthController,
 	userController controller.UserController,
@@ -19,7 +29,7 @@ func setupRouter(
 	r := gin.New()
 
 	// Middleware
-	r.Use(middleware.SimpleRequestLogger(logger)) // Custom detailed request/response logger
+	r.Use(middleware.SimpleRequestLogger(logger))
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
 
