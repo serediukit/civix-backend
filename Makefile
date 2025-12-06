@@ -1,4 +1,4 @@
-.PHONY: run restart test test-unit test-integration test-coverage test-clean
+.PHONY: run restart test test-unit test-unit-short test-integration test-integration-short test-coverage test-clean
 
 run:
 	docker-compose up -d
@@ -16,11 +16,22 @@ test-unit:
 	@echo "Running unit tests..."
 	@go test -v -race -short ./internal/services/... ./internal/repository/... ./pkg/...
 
+# Run unit tests with simplified output (skips packages without tests)
+test-unit-short:
+	@echo "Running unit tests (simplified output)..."
+	@go test -race -short -cover ./internal/services/... ./pkg/jwt ./pkg/hash
+
 # Run integration tests with testcontainers
 test-integration:
 	@echo "Running integration tests..."
 	@echo "Starting test containers (PostgreSQL and Redis)..."
 	@go test -v -race ./test/integration/...
+
+# Run integration tests with simplified output
+test-integration-short:
+	@echo "Running integration tests (simplified output)..."
+	@echo "Starting test containers (PostgreSQL and Redis)..."
+	@go test -race -cover ./test/integration/...
 
 # Run tests with coverage
 test-coverage:
